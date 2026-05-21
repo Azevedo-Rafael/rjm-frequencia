@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RJM — Jd. Valparaíba</title>
-<script type="module">
+<!-- Firebase SDK compat (funciona sem módulos ES6) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 // ═══════════════════════════════════════════════════════
 //  FIREBASE — RJM Jd. Valparaíba
 // ═══════════════════════════════════════════════════════
-import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc }      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey:            "AIzaSyDhmYBlfT4PeLPaRTlDveseUKoBlTlCp7k",
   authDomain:        "rjm-frequencia.firebaseapp.com",
@@ -20,30 +20,22 @@ const firebaseConfig = {
   appId:             "1:720880960240:web:10a98926ea086922d9b835"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db          = getFirestore(firebaseApp);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 // ── helpers de leitura/escrita ────────────────────────
-async function fbGet(chave){
+window._fbGet = async function(chave){
   try{
-    const snap = await getDoc(doc(db, 'rjm', chave));
-    return snap.exists() ? snap.data().valor : null;
+    const snap = await db.collection('rjm').doc(chave).get();
+    return snap.exists ? snap.data().valor : null;
   }catch(e){ console.warn('fbGet erro:', e); return null; }
-}
+};
 
-async function fbSet(chave, valor){
+window._fbSet = async function(chave, valor){
   try{
-    await setDoc(doc(db, 'rjm', chave), { valor });
+    await db.collection('rjm').doc(chave).set({ valor });
   }catch(e){ console.warn('fbSet erro:', e); }
-}
-
-// ── expõe para o escopo global (usado pelas funções abaixo) ──
-window._fbGet = fbGet;
-window._fbSet = fbSet;
-window._fbPronto = false;
-
-// Sinaliza que o Firebase está pronto
-window._fbGet('ping').then(()=>{ window._fbPronto = true; }).catch(()=>{});
+};
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
