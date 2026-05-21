@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RJM — Jd. Valparaíba</title>
+<script type="module">
+// ═══════════════════════════════════════════════════════
+//  FIREBASE — RJM Jd. Valparaíba
+// ═══════════════════════════════════════════════════════
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc }      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDhmYBlfT4PeLPaRTlDveseUKoBlTlCp7k",
+  authDomain:        "rjm-frequencia.firebaseapp.com",
+  projectId:         "rjm-frequencia",
+  storageBucket:     "rjm-frequencia.firebasestorage.app",
+  messagingSenderId: "720880960240",
+  appId:             "1:720880960240:web:10a98926ea086922d9b835"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db          = getFirestore(firebaseApp);
+
+// ── helpers de leitura/escrita ────────────────────────
+async function fbGet(chave){
+  try{
+    const snap = await getDoc(doc(db, 'rjm', chave));
+    return snap.exists() ? snap.data().valor : null;
+  }catch(e){ console.warn('fbGet erro:', e); return null; }
+}
+
+async function fbSet(chave, valor){
+  try{
+    await setDoc(doc(db, 'rjm', chave), { valor });
+  }catch(e){ console.warn('fbSet erro:', e); }
+}
+
+// ── expõe para o escopo global (usado pelas funções abaixo) ──
+window._fbGet = fbGet;
+window._fbSet = fbSet;
+window._fbPronto = false;
+
+// Sinaliza que o Firebase está pronto
+window._fbGet('ping').then(()=>{ window._fbPronto = true; }).catch(()=>{});
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-d:#0F6E56;
+  --amber:#BA7517;--amber-l:#FAEEDA;
+  --purple:#534AB7;--purple-l:#EEEDFE;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --green:#3B6D11;--green-l:#EAF3DE;
+  --bg:#F5F5F2;--surface:#fff;--border:#e5e5e0;
+  --text:#1a1a18;--muted:#6b6b64;--hint:#9a9a92;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height:100vh;font-size:14px;color:var(--text)}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:1rem}
+.login-card{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:2rem;width:100%;max-width:380px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.login-logo{text-align:center;margin-bottom:1.5rem}
+.login-logo-icon{width:52px;height:52px;background:var(--teal-l);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px}
+.login-title{font-size:18px;font-weight:600}.login-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.role-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:1.25rem 0}
+.role-btn{padding:.875rem;border:1.5px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;text-align:center;transition:all .15s}
+.role-btn:hover,.role-btn.selected{border-color:var(--teal);background:var(--teal-l)}
+.role-btn-icon{font-size:22px;margin-bottom:4px}.role-btn-label{font-size:12px;font-weight:600}.role-btn-sub{font-size:11px;color:var(--muted)}
+.input-group{margin-bottom:12px}
+.input-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.input-group input,.input-group select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.input-group input:focus,.input-group select:focus{border-color:var(--teal)}
+.btn-login{width:100%;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-login:hover{background:var(--teal-d)}.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:18px}
+#app{display:none;max-width:760px;margin:0 auto;padding:1rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding:.75rem 1rem;background:var(--surface);border-radius:12px;border:1px solid var(--border)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-icon{width:34px;height:34px;background:var(--teal-l);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.topbar-title{font-size:14px;font-weight:600;line-height:1.2}.topbar-sub{font-size:11px;color:var(--muted)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.user-badge{font-size:11px;color:var(--muted);padding:4px 10px;background:var(--bg);border-radius:99px;border:1px solid var(--border)}
+.btn-logout{font-size:12px;color:var(--muted);padding:5px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer}
+.btn-logout:hover{background:var(--bg)}
+.nav{display:flex;gap:4px;margin-bottom:1rem;background:var(--surface);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.nav-btn{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:7px;color:var(--muted);border:none;background:transparent;transition:all .15s}
+.nav-btn.active{background:var(--teal);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.card-title{font-size:13px;font-weight:600;margin-bottom:.75rem}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.75rem}
+.stat{background:var(--bg);border-radius:10px;padding:.875rem;border:1px solid var(--border)}
+.stat-val{font-size:22px;font-weight:700}.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}.stat-sub{font-size:10px;color:var(--hint);margin-top:1px}
+.fila-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:.625rem;overflow:hidden}
+.fila-head{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;cursor:pointer;transition:background .1s}
+.fila-head:hover{background:var(--bg)}
+.fila-head-left{display:flex;align-items:center;gap:10px}
+.fila-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-m{background:var(--teal)}.dot-f{background:var(--purple)}
+.fila-name{font-size:13px;font-weight:600}.fila-aux{font-size:11px;color:var(--muted)}
+.fila-right{display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600}
+.badge-m{background:var(--teal-l);color:var(--teal-d)}.badge-f{background:var(--purple-l);color:var(--purple)}
+.badge-ok{background:var(--green-l);color:var(--green)}.badge-gap{background:var(--amber-l);color:var(--amber)}
+.chevron{font-size:12px;color:var(--hint);transition:transform .2s;display:inline-block}.chevron.open{transform:rotate(180deg)}
+.prog-wrap{height:3px;background:var(--bg)}.prog-bar{height:100%;background:var(--teal);transition:width .3s}
+.member-list{display:none;padding:.25rem .5rem .5rem;border-top:1px solid var(--border)}.member-list.open{display:block}
+.member-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .1s}
+.member-row:hover{background:var(--bg)}.member-cb{width:16px;height:16px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+.member-name{font-size:13px;line-height:1.3}.member-visita{font-style:italic;color:var(--hint)}
+.date-sel{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);outline:none}
+.date-sel:focus{border-color:var(--teal)}
+.filter-row{display:flex;gap:6px;margin-bottom:.75rem;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:99px;font-size:12px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;font-weight:500}
+.filter-btn.on{background:var(--teal);color:#fff;border-color:var(--teal-d)}
+.alert{padding:.625rem .875rem;border-radius:8px;font-size:12px;margin-bottom:.625rem}
+.alert-ok{background:var(--teal-l);color:var(--teal-d)}.alert-warn{background:var(--amber-l);color:var(--amber)}
+.gap-item{padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}.gap-item:last-child{border:none}
+.gap-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:4px}
+.gap-date{font-weight:600}.gap-filas{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.gap-tag{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--amber-l);color:var(--amber);font-weight:600}
+.hist-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.hist-row:last-child{border:none}
+.hist-date{color:var(--muted);min-width:50px;font-weight:500}
+.hist-bars{flex:1;display:flex;flex-direction:column;gap:2px}
+.hist-bar-wrap{background:var(--bg);border-radius:99px;height:5px;overflow:hidden}
+.hist-bar-fill{height:100%;border-radius:99px}
+.bar-2026{background:var(--teal)}.bar-2025{background:#b5d4f4}
+.hist-nums{display:flex;gap:5px;min-width:72px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.hist-official{font-weight:700}.hist-app{font-size:10px;color:var(--hint)}
+.hist-gap-icon{font-size:10px;color:var(--amber)}.hist-nota{font-size:10px;color:var(--purple);font-style:italic}
+.trend-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:.75rem}
+.trend-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.75rem}
+.trend-label{font-size:11px;color:var(--muted);margin-bottom:4px}.trend-val{font-size:20px;font-weight:700}
+.trend-cmp{font-size:11px;margin-top:2px}
+.trend-up{color:var(--teal-d)}.trend-dn{color:var(--red)}.trend-eq{color:var(--muted)}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-bottom:.5rem;flex-wrap:wrap}
+.legend-dot{width:10px;height:5px;border-radius:99px;display:inline-block;margin-right:4px;vertical-align:middle}
+.rank-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.rank-row:last-child{border:none}
+.rank-n{width:20px;font-size:10px;color:var(--hint);flex-shrink:0;text-align:right}.rank-name{flex:1}
+.rank-fila{font-size:10px;color:var(--hint)}.rank-cnt{font-weight:700;color:var(--teal-d);min-width:28px;text-align:right}
+.action-bar{display:flex;justify-content:space-between;align-items:center;margin-top:.875rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.sel-count{font-size:12px;color:var(--muted)}
+.btn-save{padding:9px 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-save:hover{background:var(--teal-d)}.empty{text-align:center;color:var(--hint);font-size:13px;padding:2rem}
+.oficial-box{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;background:var(--teal-l);border:1px solid var(--teal);border-radius:10px;margin-bottom:.75rem}
+.oficial-box label{font-size:12px;font-weight:600;color:var(--teal-d);white-space:nowrap}
+.oficial-input{width:72px;padding:6px 10px;border:1px solid var(--teal);border-radius:7px;font-size:15px;font-weight:700;color:var(--teal-d);background:#fff;text-align:center;outline:none}
+.oficial-input:focus{border-color:var(--teal-d);box-shadow:0 0 0 2px rgba(29,158,117,.15)}
+.btn-oficial{padding:6px 14px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-oficial:hover{background:var(--teal-d)}
+.oficial-saved{font-size:11px;color:var(--teal-d);margin-left:4px;opacity:0;transition:opacity .3s}
+.oficial-saved.show{opacity:1}
+.member-move-btn{margin-left:auto;padding:3px 9px;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--hint);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.member-move-btn:hover{background:var(--amber-l);color:var(--amber);border-color:var(--amber)}
+.move-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+.move-modal{background:var(--surface);border-radius:14px;padding:1.5rem;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.move-modal-title{font-size:15px;font-weight:600;margin-bottom:.5rem}
+.move-modal-sub{font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.5}
+.move-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:transparent;font-size:13px;cursor:pointer;color:var(--muted)}
+.btn-confirm{padding:8px 16px;border:none;border-radius:8px;background:var(--teal);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.btn-confirm:hover{background:var(--teal-d)}
+@media(max-width:500px){.stat-grid{grid-template-columns:1fr 1fr}.stat-grid .stat:last-child{grid-column:span 2}.nav-btn{font-size:10px;padding:6px 2px}.trend-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🕊️</div>
+      <div class="login-title">RJM — Jd. Valparaíba</div>
+      <div class="login-sub">Reunião de Jovens e Menores</div>
+    </div>
+    <div class="role-btns">
+      <button class="role-btn selected" onclick="selectRole('auxiliar',this)"><div class="role-btn-icon">✋</div><div class="role-btn-label">Auxiliar</div><div class="role-btn-sub">Registrar presença</div></button>
+      <button class="role-btn" onclick="selectRole('cooperador',this)"><div class="role-btn-icon">📋</div><div class="role-btn-label">Cooperador</div><div class="role-btn-sub">Painel completo</div></button>
+    </div>
+    <div id="login-fields"></div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">🕊️</div>
+      <div><div class="topbar-title">RJM — Jd. Valparaíba</div><div class="topbar-sub">Reunião de Jovens e Menores</div></div>
+    </div>
+    <div class="topbar-right">
+      <span class="user-badge" id="user-badge"></span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+  <div class="nav" id="coop-nav" style="display:none">
+    <button class="nav-btn active" onclick="goTab('painel',this)">📊 Painel</button>
+    <button class="nav-btn" onclick="goTab('gaps',this)">⚠️ Pendências</button>
+    <button class="nav-btn" onclick="goTab('historico',this)">📅 Histórico</button>
+    <button class="nav-btn" onclick="goTab('ranking',this)">🏆 Ranking</button>
+  </div>
+  <div id="screen-auxiliar" style="display:none">
+    <div class="card"><div class="card-title">📅 Data da reunião</div><select class="date-sel" id="aux-data" onchange="renderFilasAux()"></select></div>
+    <div class="filter-row">
+      <button class="filter-btn on" id="aux-f-m" onclick="setGenero('M')">♂ Meninos</button>
+      <button class="filter-btn" id="aux-f-f" onclick="setGenero('F')">♀ Meninas</button>
+    </div>
+    <div id="aux-filas"></div>
+    <div class="action-bar"><span class="sel-count" id="aux-count"></span><button class="btn-save" onclick="salvarPresenca()">💾 Salvar presença</button></div>
+    <div id="aux-alert" style="margin-top:.625rem"></div>
+  </div>
+  <div id="screen-painel" style="display:none">
+    <div class="stat-grid" id="painel-stats"></div>
+    <div class="card"><div class="card-title">📅 Reunião selecionada</div><select class="date-sel" id="painel-data" onchange="renderPainel()"></select></div>
+    <div id="painel-oficial-box"></div>
+    <div id="painel-filas"></div>
+  </div>
+  <div id="screen-gaps" style="display:none">
+    <div class="card">
+      <div class="card-title">⚠️ Filas com pendência de lançamento</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Apenas reuniões já realizadas. Mostra filas que não enviaram registro e a diferença entre o total oficial e o lançado.</div>
+      <div id="gaps-list"></div>
+    </div>
+  </div>
+  <div id="screen-historico" style="display:none">
+    <div class="trend-grid" id="trend-cards"></div>
+    <div class="card">
+      <div class="card-title">📅 Recitativos por reunião — 2026 vs 2025</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:var(--teal-d)"></span><b>2026 oficial</b></span>
+        <span><span class="legend-dot" style="background:#b5d4f4"></span>'25: 2025</span>
+        <span><span class="legend-dot" style="background:var(--teal);opacity:.4"></span>app: lançado no app</span>
+        <span style="color:var(--amber)">⚠ gaps não lançados</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Gráfico de linha: laranja = 2025 · verde = 2026. Tabela: barra 2026 (topo), 2025 (meio), app (baixo).</div>
+      <div id="hist-list"></div>
+    </div>
+  </div>
+  <div id="screen-ranking" style="display:none">
+    <div class="filter-row" id="rank-filters"></div>
+    <div class="card"><div class="card-title">🏆 Ranking de presenças — 2026</div><div id="rank-list"></div></div>
+  </div>
+</div>
+<script>
+const MEMBROS={
+  '1M':{label:'1ª Fila — Meninos',aux:'Guilherme',faixa:'0–6 anos',genero:'M',membros:['Angelo (Ira. Dani e Ir. Renan)','Benício (Filho - Maigel)','Davi (Ira. Ariele & Ir. Rafael)','Gael (Ir. Maurício & Ira. Kelly)','Henry (Ir. Daniel & Ira. Gabriela)','Mateus (Ir. Rafael & Ira. Samara)','Mathias (Ira. Priscila)','Murilo (Irmão da Alexia)','Vinicius (Ira. Juliana)','Eron (Neto - Ira. Cida)','Arthur (Barueri)','Augusto (S. Vicente)','Pedro Henrique (Sobrinho - Ira. Olga)','João (Primo do Murilo - Jacareí)']},
+  '2M':{label:'2ª Fila — Meninos',aux:'Samuel',faixa:'6–11 anos',genero:'M',membros:['Alisson (Ir. Advânio & Ira. Priscila)','Arthur (Irmão do Gustavo - Ira. Amanda)','Bernardo (Ira. Suelen)','Caio (Ir. Rodrigo & Ira. Tati)','Gabriel (Ira. Joyce & Ir. Cristiano)','Heitor (Ira. Paty & Ir. Juninho)','João (Ir. Lucas)','Levi (Ir. Rafael & Ira. Samara)','Lorenzo (Ir. Daniel & Ira. Gabriela)','Lorenzo (Ira. Lidiane)','Lucca (Ir. Wilson & Ira. Carla)','Maurício (Ira. Andriele)','Miguel (Ira. Lene)','Murilo (Ira. Aline)','Pedrinho (Ir. Rafinha & Ira. Ariele)','Arthur (Ira. Cida & Ir. Silva)']},
+  '3M':{label:'3ª Fila — Moços',aux:'Felipe',faixa:'11–15 anos',genero:'M',membros:['Daniel (Ir. Ismael & Ira. Regina)','Gustavo (Ira. Amanda)','Isaac (Ira. Audrey)','Joaquim (Primo do Murilo - Jacareí)','Lucca (Ir. Rodrigo & Ira. Tati)','Rodrigo (Ir. Ismael & Ira. Regina)','Yuri (Ir. Thiago)','Owen (Ira. Amanda)','Heitor (Ir. Daniel)','Felipe (Amigo do Daniel)']},
+  '4M':{label:'4ª Fila — Moços',aux:'Robert',faixa:'15+ anos',genero:'M',membros:['Arthur (Op. de Som)','Caio Gasparetti','Cauã (Jd. Diamante)','Emanuel','Felipe (Auxiliar)','Gabriel (Ir. Maurício)','Gabriel (Ir. Bruno)','Guilherme (Auxiliar)','Hébert (Ir. Advânio & Ira. Priscila)','Henrique (Ira. Rosana & Ir. Toninho)','Isaac (Jd. Califórnia - Jacareí)','Kaique (Ir. Kleber)','Matheus (Ira. Juliana)','Miguel (Ira. Juliana)','Miguel (Ir. Kleber)','Murilo (Auxiliar)','Nicolas (Ira. Daiane)','Nicolas (Ira. Letícia)','Nicolas (Namorado - Luiza Borsoi)','Pedrão (Ira. Nayara)','Pedro Borsoi (Ira. Ju & Ir. Diogo)','Robert (Auxiliar)','Samuel (Auxiliar)','Samuelzinho (Flauta - Ira. Adriana)','Vitão (Ir. Marcelo & Ira. Léia)','Vitor (Vila Industrial)','Vini Tamanhoni','Nathan (Jacareí)','Kaio (Caçapava)','Otávio (Ir. Daniel)','Luis Lucas','Daniel (Ira. Janaína)','Elielton (Vila Tesouro)','Luan (Jd. Diamante)','Ricardinho (Ira. Fernanda)','Marcelo (Ira. Lucia & Ir. Márcia)','Adans']},
+  '1F':{label:'1ª Fila — Meninas',aux:'Débora',faixa:'0–6 anos',genero:'F',membros:['Alice (Ira. Paty)','Alice (Ira. Jaqueline & Ir. Vinicius)','Clara (Ira. Emily & Ir. Bruno)','Elisa (Ira. Thaís & Ir. Anderson)','Ester (Ira. Cláudia & Ir. Misael)','Isabelle (Ira. Aninha & Ir. Renan)','Gabriela (Bebê - Ira. Juliana)','Gabriela (Ira. Suelen)','Maria Elisa (Bebê - Ira. Dani & Ir. Elias)','Maria Laura (Ira. Jaqueline & Ir. Lucas)','Manuela (Ira. Thaís & Ir. Josimar)','Melissa (Ira. Priscila)','Manuela (Neta da Ira. Elisa)','Luíza (Irmã da Júlia)']},
+  '2F':{label:'2ª Fila — Meninas',aux:'Milena',faixa:'6–11 anos',genero:'F',membros:['Alícia (Ira. Débora - Barueri)','Ana Clara (Ira. Andriele)','Anne (Ira. Aline e Ir. Cláudio)','Clarice (Ir. Letícia)','Euza (Ira. Delvânia)','Helena (Ira. Daiane)','Isadora Ashley','Maitê (Ir. Daniel)','Maria (Ir. Elias & Ira. Dani)','Rebeca (Ira. Denise)','Ana Luiza (Ira. Raquel)','Laura (Jd. São Vicente)','Valentina (Cpos. dos Alemães)','Fernanda (Visita)','Selena (Ira. Amanda)','Angelina (Ir. Renan & Ira. Dani)']},
+  '3F':{label:'3ª Fila — Moças',aux:'Sabrina',faixa:'11–15 anos',genero:'F',membros:['Ana Lívia (Ira. Juliana)','Angelina (Ir. Renan & Ira. Dani)','Bella (Ira. Sueli)','Belinha (Ira. Ana Paula)','Duda (Ira. Juliana / Ir. Flávio)','Gabriela (Ira. Ana Paula)','Gabriela (Ira. Kelly)','Heloísa (Ira. Ione - Vila Maria)','Isys (Ira. Bete)','Milena (Ira. Joyce)','Rebeca (Ir. Maurício)','Sara (Ira. Lene)','Sara (Ira. Noemi)','Valentina (Ira. Lidiane)','Isabela (Irmã da Dudinha)','Emily (Ira. Solange)','Sofia (Testemunhada - Valentina)','Mariana (Testemunhada - Ira. Ana Paula)','Thaís (Sobrinha - Ira. Dani & Ir. Renan)','Nicole (Ira. Aninha e Ir. Renan)','Geovanna (Ira. Lene)','Isabela (Ira. Nilmara)','Allana (Jd. Sta. Inês)','Nádya (Neta - Ira. Elisa)','Aninha (Ira. Araci)']},
+  '4F':{label:'4ª Fila — Moças',aux:'Mari / Isabela',faixa:'15+ anos',genero:'F',membros:['Alexia (Testemunhada - Namorada do Hebert)','Beatriz (Ir. Marcelo)','Débora (Auxiliar)','Duda (Ira. Zilá)','Emily (Ira. Andriele)','Gabriela (Novo Horizonte - Namorada do Ir. Matheus)','Geovanna (Ira. Audrey & Ir. Kleber)','Giovanna (Ira. Silvana)','Isabela (Auxiliar)','Janiete (Jani)','Júlia Leite (Ira. Olga)','Luiza Borsoi','Mari Miranda (Auxiliar)','Milena (Auxiliar)','Nicoly (Ira. Bete & Ir. Alexandre)','Rafaela R.','Sabrina (Auxiliar)','Sâmela','Solange','Tânia','Ana Beatriz (São Francisco Xavier)','Estela (Vila Industrial - Ira. Adriana)','Julia (Prima - Giovanna)','Loretta','Kemelly (Prima da Giovanna)','Gabriela (Ira. Vanessa)','Isabela (São Vicente - Ira. Taty)','Carrie','Stephany (Ira. Juliana)','Livia (Ir. Sérgio & Ira. Dani)','Vitória (Ira. Bruna)','Tainá (Ira. Helena)','Letícia (Ir. Marcelo)','Isadora (Ira. Ana Paula)']}
+};
+
+function getDomingos(){const list=[];let d=new Date(2026,0,4);while(d.getFullYear()===2026){list.push(`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/2026`);d.setDate(d.getDate()+7);}return list;}
+const DOMINGOS=getDomingos();
+
+// Converte DD/MM/YYYY para YYYY/MM/DD para comparação correta como string
+function dateCmp(d){return d.split('/').reverse().join('/');}
+function dateLE(a,b){return dateCmp(a)<=dateCmp(b);}
+function dateLT(a,b){return dateCmp(a)<dateCmp(b);}
+
+const TOTAL_OFICIAL_2026={"04/01/2026":50,"11/01/2026":64,"18/01/2026":46,"25/01/2026":60,"01/02/2026":67,"08/02/2026":51,"15/02/2026":52,"22/02/2026":66,"01/03/2026":49,"08/03/2026":63,"15/03/2026":49,"22/03/2026":49,"29/03/2026":69,"05/04/2026":36,"12/04/2026":42,"19/04/2026":44,"26/04/2026":63,"03/05/2026":47,"10/05/2026":45};
+const TOTAL_OFICIAL_2025={"05/01/2025":42,"12/01/2025":45,"19/01/2025":63,"26/01/2025":71,"02/02/2025":66,"09/02/2025":44,"16/02/2025":71,"23/02/2025":77,"02/03/2025":55,"09/03/2025":48,"16/03/2025":67,"23/03/2025":67,"30/03/2025":67,"06/04/2025":52,"13/04/2025":41,"27/04/2025":54,"04/05/2025":59,"11/05/2025":37,"18/05/2025":53,"25/05/2025":60,"01/06/2025":53,"08/06/2025":61,"15/06/2025":57,"22/06/2025":52,"29/06/2025":66,"06/07/2025":49,"13/07/2025":56,"20/07/2025":41,"27/07/2025":51,"03/08/2025":45,"10/08/2025":53,"17/08/2025":50,"24/08/2025":64,"31/08/2025":57,"07/09/2025":68,"14/09/2025":40,"21/09/2025":60,"05/10/2025":60,"12/10/2025":51,"19/10/2025":54,"26/10/2025":66,"02/11/2025":44,"09/11/2025":51,"16/11/2025":42,"23/11/2025":77,"30/11/2025":62,"07/12/2025":41,"14/12/2025":78,"21/12/2025":61,"28/12/2025":59};
+const MAPA_V25={"04/01/2026":42,"11/01/2026":45,"18/01/2026":63,"25/01/2026":71,"01/02/2026":66,"08/02/2026":44,"15/02/2026":71,"22/02/2026":77,"01/03/2026":55,"08/03/2026":48,"15/03/2026":67,"22/03/2026":67,"29/03/2026":67,"05/04/2026":52,"12/04/2026":41,"26/04/2026":54,"03/05/2026":59,"10/05/2026":37};
+const NOTAS_2026={"19/04/2026":"RGE","10/05/2026":"Dia das Mães","24/05/2026":"Prov 7","14/06/2026":"Num 13"};
+const HISTORICO_IMPORTADO={"03/05/2026|3F":["Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Sara (Ir Noemi)"],"18/01/2026|4F":["Ana Beatriz (São Francisco Xavier)","Emily (Vila Industrial)","Gabriela (Novo Horizonte - Namorada do Ir. Matheus)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Sabrina (Auxiliar)","Solange","Sâmela"],"22/02/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Gabriel","Gabriel (Ir. Maurício)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Ir. - André Martins","Matheus","Nicolas","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Paulo","Robert (Auxiliar)","Samuel (Auxiliar)"],"22/03/2026|1F":["Alice (Ira. Paty)","Aurora (sobrinha do Murilo)","Gabriela (Bebê - Ira. Juliana)","Manuela (Ira. Thaís & Ir. Josimar)"],"29/03/2026|4M":["Arthur (Op. de Som)","Felipe (Auxiliar)","Gabriel (Ir. Bruno)","Guilherme (Auxiliar)","Hébert (Ir. Advânio & Ira. Priscila)","Matheus (Ira. Juliana)","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Robert (Auxiliar)","Samuel (Auxiliar)","Victor e Arthur e Felipe"],"22/02/2026|1F":["Alice (Ira. Paty)","Estela","Ester (Ira. Cláudia & Ir. Misael)","Manuela (Ira. Thaís & Ir. Josimar)","Maria Laura"],"08/03/2026|1F":["Elisa (Ira. Thaís & Ir. Anderson)","Ester (Ira. Cláudia & Ir. Misael)","Manuela (Ira. Thaís & Ir. Josimar)"],"01/03/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Gabi (helô)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Mari Miranda (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)","Sâmela"],"15/03/2026|2F":["Angelina (Ir. Renan & Ira. Dani)","Clarice (Ir. Letícia)","Morena (amiga da clarice)"],"12/04/2026|1F":["Alice ( 1º recitativo- sobrinha da Giovana)","Alice (Ira. Paty)","Ester (Ira. Cláudia & Ir. Misael)","Isabelle (Ira. Aninha & Ir. Renan)","Laura ( vila Paiva)"],"25/01/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Emily (Ira. Andriele)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Isabela (Jd. Sta. Inês)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)","Sâmela"],"10/05/2026|2M":["Alisson","Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)"],"04/01/2026|4M":["Gabriel (Ir. Bruno)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Murilo (Auxiliar)","Nicolas (Namorado - Luiza Borsoi)","Pedro Borsoi (Ira. Ju & Ir. Diogo)","Robert (Auxiliar)","Samuel (Auxiliar)","Samuelzinho (Flauta - Ira. Adriana)"],"22/02/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Emily (Ira. Andriele)","Geovanna (Ira. Audrey & Ir. Kleber)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Janiete (Jani)","Luiza Borsoi","Mariana (Prima da Luíza - Jd. Califórnia - Jacareí)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Sabrina (Auxiliar)","Sophia (giovanna)","Sâmela","Tânia"],"08/03/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Gabriela (Novo Horizonte - Namorada do Ir. Matheus)","Geovanna (Ira. Audrey & Ir. Kleber)","Janiete (Jani)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)","Sâmela","Tânia"],"04/01/2026|2F":["Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Isadora Ashley","Maria (Ir. Elias & Ira. Dani)"],"15/03/2026|2M":["Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Lorenzo (Ira. Lidiane)","Murilo (Ira. Aline)"],"01/03/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Felipe (Auxiliar)","Gabriel (Ir. Bruno)","Gustavo (Visita)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Matheus (Ira. Juliana)","Miguel (ira Juliana)","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Pedrão (Ira. Nayara)","Samuelzinho (Flauta - Ira. Adriana)","Vinícius (Visita)"],"26/04/2026|2F":["Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Isadora Ashley"],"15/03/2026|4M":["Felipe (Auxiliar)","Gabriel (Ir. Maurício)","Guilherme (Auxiliar)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Matheus (Ira. Juliana)","Miguel (Ira. Juliana)","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Robert (Auxiliar)","Samuel (Auxiliar)"],"12/04/2026|2M":["Alisson","Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Pedrinho (Ir. Rafinha & Ira. Ariele)"],"04/01/2026|3M":["Lucas","Miguel (Ira. Juliana)","Vitão (Ir. Marcelo & Ira. Léia)"],"01/02/2026|1F":["Alice (Ira. Paty)","Ester (Ira. Cláudia & Ir. Misael)","Helena (visita)","Melissa (Ira. Priscila)"],"01/02/2026|1M":[],"26/04/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Emily (Ira. Andriele)","Evelyn Nicole (Namorada do Robert)","Gabriela (Novo Horizonte - Namorada do Ir. Matheus)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Isabela (Jd. Sta. Inês)","Isabelle (irmã da Manu)","Isabelle Sette","Júlia Leite (Ira. Olga)","Manu (Caio)","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)","Sâmela","Tânia"],"11/01/2026|1F":["Alice (Ir. Thiago & Ira. Carol)","Gabriela (Bebê - Ira. Juliana)","Isabelle (Ira. Aninha & Ir. Renan)","Manuela (Ira. Thaís & Ir. Josimar)","Melissa (Ira. Priscila)"],"01/03/2026|3F":["Ana Lívia (Ira. Juliana)","Duda (Ira. Juliana / Ir. Flávio)","Gabriela (Ira. Kelly)","Hadayne","Heloísa (Ira. Ione - Vila Maria)","Isys (Ira. Bete)","Nicole (Ira. Aninha e Ir. Renan)","Rebeca (Ir. Maurício)","Sara (Ira. Lene)"],"15/02/2026|1F":["Elisa (Ira. Thaís & Ir. Anderson)","Isabelle (Ira. Aninha & Ir. Renan)","Manuela (Ira. Thaís & Ir. Josimar)"],"10/05/2026|2F":["Clarice (Ir. Letícia)"],"08/03/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Felipe","Gustavo (Ira. Amanda)","Joaquim (Primo do Murilo - Jacareí)","Lucca (Ir. Rodrigo & Ira. Tati)","Miguel (Kleber)","Rodrigo (Ir. Ismael & Ira. Regina)"],"26/04/2026|1F":["Alice (Ira. Paty)","Alice (sobrinha da Geovana)","Manuela (Ira. Thaís & Ir. Josimar)"],"01/02/2026|3F":["Ana Isabelly ( Galo Branco )","Bella (Ira. Sueli)","Duda (Ira. Juliana / Ir. Flávio)","Gabriela (Ira. Kelly)","Milena (Ira. Joyce)","Sara (Ira. Lene)"],"15/02/2026|4F":["Débora (Auxiliar)","Emily (Ira. Andriele)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Júlia Leite (Ira. Olga)","Mari Miranda (Auxiliar)","Mariana (Prima da Luíza - Jd. Califórnia - Jacareí)","Milena (Auxiliar)","Sabrina (Auxiliar)","Solange"],"01/02/2026|4M":["Caio Gasparetti","Felipe (Auxiliar)","Gabriel (Ir. Maurício)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Kaique (Ir. Kleber)","Matheus (Ira. Juliana)","Miguel ir Juliana","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Robert (Auxiliar)","Samuel (Auxiliar)"],"05/04/2026|4F":["Geovanna","Isabela (Auxiliar)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Sabrina (Auxiliar)","Solange","Sâmela"],"05/04/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Lucca (Ir. Rodrigo & Ira. Tati)","Miguel","Rodrigo (Ir. Ismael & Ira. Regina)","Yuri (Filho do Ir. Thiago)"],"08/03/2026|2M":["Arthur (Irmão do Gustavo - Ira. Amanda)","Caio (Ir. Rodrigo & Ira. Tati)","Levi (Ir. Rafael & Ira. Samara)","Lorenzo (Ir. Daniel & Ira. Gabriela)","Lorenzo (Ira. Lidiane)","Lucas","Lucca (Ir. Wilson & Ira. Carla)","Murilo (Ira. Aline)","Pedrinho (Ir. Rafinha & Ira. Ariele)"],"15/02/2026|2F":["Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Gabriele","Isadora Ashley"],"01/02/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Geovanna (Ira. Audrey & Ir. Kleber)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Isabela (Jd. Sta. Inês)","Isabele - Manuela ( Jd. Portugal ) - Pollyana ( Galo Branco) - Geovanna (Monte Castelo)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)","Solange","Sâmela"],"15/03/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Débora (Auxiliar)","Emily (Ira. Andriele)","Giovanna (Ira. Silvana)","Isa (jd. Portugal)","Isabela (Auxiliar)","Luiza Borsoi","Manuela (jd. Potugal)","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Sabrina (Auxiliar)"],"22/02/2026|2M":["Bernardo (Ira. Suelen)","Caio (Ir. Rodrigo & Ira. Tati)","Heitor (Ira. Paty & Ir. Juninho)","Henrique (Cacapava)  Joao","Henrique - nova Caçapava","Levi (Ir. Rafael & Ira. Samara)","Lorenzo (Ir. Daniel & Ira. Gabriela)","Lorenzo (Ira. Lidiane)","Lucca (Ir. Wilson & Ira. Carla)","Maurício (Ira. Andriele)","Miguel (Ira. Lene)"],"15/02/2026|1M":["Alisson (Ir. Advânio & Ira. Priscila)","Davi - Ir. Fabio Vila Maria","Mateus (Ir. Rafael & Ira. Samara)"],"08/02/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Felipe (Auxiliar)","Gabriel (Ir. Bruno)","Guilherme (Auxiliar)","Kaique (Ir. Kleber)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Samuelzinho (Flauta - Ira. Adriana)"],"08/03/2026|2F":["Alícia (Ira. Débora)","Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Juliana ( prima da Sâmela )","Maitê (Ir. Daniel)"],"22/03/2026|4F":["Débora (Auxiliar)","Emily (Ira. Andriele)","Isabela (Auxiliar)","Marcella - (Borda do Campo - Caçapava)","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Rafaela R.","Sabrina (Auxiliar)","Solange"],"11/01/2026|2F":["Isadora Ashley"],"29/03/2026|2M":["Arthur (Irmão do Gustavo - Ira. Amanda)","Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Lorenzo (Ir. Daniel & Ira. Gabriela)","Lorenzo (Ira. Lidiane)","Murilo (Ira. Aline)","Yuri"],"08/02/2026|1F":["Cecília","Estella (testemunhada)","Gabriela (Ira. Suelen)","Isabelle (Ira. Aninha & Ir. Renan)","Manuela (Ira. Thaís & Ir. Josimar)"],"04/01/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Estella (Vila Industrial - Ira. Adriana)","Geovanna (Ira. Audrey & Ir. Kleber)","Giovanna (Ira. Silvana)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)"],"29/03/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Gustavo (Ira. Amanda)","Joaquim (Primo do Murilo - Jacareí)","Lucca (Ir. Rodrigo & Ira. Tati)","Rodrigo (Ir. Ismael & Ira. Regina)","Yuri (Filho do Ir. Thiago)"],"05/04/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","João e natan visita"],"26/04/2026|3F":["Duda (Ira. Juliana / Ir. Flávio)","Gabriela (Ira. Kelly)","Heloísa (Ira. Ione - Vila Maria)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Sara ( Ir Noemi )","Valentina (Ira. Lidiane)"],"29/03/2026|1F":["Alice (Ira. Paty)","Ester (Ira. Cláudia & Ir. Misael)","Evelyn (Sobrinha da Sol) - Luiza (Irmã Silvana)","Manuela (Ira. Thaís & Ir. Josimar)"],"08/02/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Lorenzo (Ira. Lidiane)","Murilo (Ira. Aline)"],"18/01/2026|3F":["Duda (Ira. Juliana / Ir. Flávio)","Helena (Jd Morumbi)","Isys (Ira. Bete)","Rebeca (Ir. Maurício)","Valentina (Ira. Lidiane)"],"01/03/2026|2F":["Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Maitê (Ir. Daniel)"],"22/02/2026|1M":["Alisson (Ir. Advânio & Ira. Priscila)","Benjamin - Morumbi","Benício (Filho - Maigel)","Mateus (Ir. Rafael & Ira. Samara)"],"18/01/2026|1M":["Gabriel - Morumbi José Otávio - Ira. Bárbara e ir. Moisés  Rafael - Morumbi"],"19/04/2026|2M":["Arthur (Irmão do Gustavo - Ira. Amanda)","Caio (Ir. Rodrigo & Ira. Tati)","Gustavo - Visita","Levi (Ir. Rafael & Ira. Samara)","Murilo (Ira. Aline)"],"15/02/2026|4M":["Arthur (Op. de Som)","Felipe (Auxiliar)","Gabriel (Ir. Maurício)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Matheus (Ira. Juliana)","Miguel (Ir. Kleber)","Nicolas (Ira. Letícia)","Robert (Auxiliar)"],"29/03/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Emily (Ira. Andriele)","Geovanna (Ira. Audrey & Ir. Kleber)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Juliana (parque industrial)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Novo Horizonte)","Rafaela R.","Solange","Sâmela"],"26/04/2026|1M":["João (Primo do Murilo - Jacareí)","Mateus (Ir. Rafael & Ira. Samara)"],"25/01/2026|4M":["Felipe (Auxiliar)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Isaac - RJ","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Samuel (Auxiliar)"],"18/01/2026|1F":["Ester (Ira. Cláudia & Ir. Misael)","Rebeca (Denise)"],"25/01/2026|3M":["Christian (Visita)","Lucca (Ir. Rodrigo & Ira. Tati)","Vitão (Ir. Marcelo & Ira. Léia)"],"29/03/2026|3F":["Ana Lívia (Ira. Juliana)","Belinha (Ira. Ana Paula)","Bella (Ira. Sueli)","Emilly ( campos de São José)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Isys (Ira. Bete)","Kyara","Lara","Milena (Ira. Joyce)","Sarah","Valentina (Ira. Lidiane)"],"08/02/2026|4F":["Débora (Auxiliar)","Emily (Ira. Andriele)","Estella (Vila Industrial - Ira. Adriana)","Gabriela (caçapava)","Geovanna (Ira. Audrey & Ir. Kleber)","Isabela (Auxiliar)","Janiete (Jani)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Marcela (caçapava)","Maria Fernanda (caçapava)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Rafaela R.","Sabrina (Auxiliar)","Tânia"],"04/01/2026|2M":["Gabriel (Ira. Joyce & Ir. Cristiano)","Levi (Ir. Rafael & Ira. Samara)","Lorenzo (Ir. Daniel & Ira. Gabriela)","Maurício (Ira. Andriele)","Murilo (Ira. Aline)"],"22/02/2026|2F":["Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Isabelle","Isadora Ashley"],"12/04/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Emily (Ira. Andriele)","Esther","Gabriela (Novo Horizonte - Namorada do Ir. Matheus)","Giovanna (Ira. Silvana)","Isabela (Auxiliar)","Isabela (Jd. Sta. Inês)","Júlia Leite (Ira. Olga)","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Novo Horizonte)","Sabrina (Auxiliar)"],"22/03/2026|2F":["Alícia (Ira. Débora)","Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Helena (Ira. Daiane)"],"12/04/2026|3F":["Duda (Ira. Juliana / Ir. Flávio)","Isys (Ira. Bete)","Nicole (Ira. Aninha e Ir. Renan)","Rebeca (Ir. Maurício)"],"05/04/2026|2F":["Clarice (Ir. Letícia)","Helena (Ira. Daiane)","Mariana ( Guararema )"],"19/04/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Emily (Ira. Andriele)","Geovanna (Ira. Audrey & Ir. Kleber)","Giovanna (Ira. Silvana)","Luiza Borsoi","Mari Miranda (Auxiliar)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Sabrina (Auxiliar)","Tânia"],"18/01/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Lorenzo (Ira. Lidiane)","Murilo (Ira. Aline)","Theo ( vila industrial)"],"03/05/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Ana Beatriz (São Francisco Xavier)","Duda (Ira. Zilá)","Geovanna (Ira. Audrey & Ir. Kleber)","Isabela (Auxiliar)","Janiete (Jani)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Poliana Jardim America - ( testemunhada - Sônia do São Vicente)","Sabrina (Auxiliar)","Tânia"],"08/02/2026|2F":["Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Isabele ( testemunhada)"],"19/04/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Gustavo (Ira. Amanda)","Isaac (Ira. Audrey)","Lorenzo (Poços de Caldas)","Lorenzo - Novo na igreja","Lucca (Ir. Rodrigo & Ira. Tati)","Miguel (Kleber)","Rodrigo (Ir. Ismael & Ira. Regina)"],"01/02/2026|2F":["Alícia (Ira. Débora)","Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Letícia ( galo branco)","Maria (Ir. Elias & Ira. Dani)","Rebeca (Ira. Denise)"],"01/03/2026|2M":["Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Lucca (Ir. Wilson & Ira. Carla)","Miguel (Ira. Lene)"],"22/03/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Lucca (Ir. Wilson & Ira. Carla)","Miguel (Ira. Lene)","Pedrinho (Ir. Rafinha & Ira. Ariele)","Vinicius"],"08/03/2026|3F":["Belinha (Ira. Ana Paula)","Duda (Ira. Juliana / Ir. Flávio)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Sarah - Valparaíba","Valentina (Ira. Lidiane)"],"22/02/2026|3F":["Ana Lívia (Ira. Juliana)","Belinha (Ira. Ana Paula)","Duda (Ira. Juliana / Ir. Flávio)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Isys (Ira. Bete)","Laeciely ( Caçapava ) Sarah ( primeira vez na reunião de jovens)","Valentina (Ira. Lidiane)"],"12/04/2026|2F":["Ana Clara (Ira. Andriele)","Clarice (Ir. Letícia)","Euza (Ira. Delvânia)"],"25/01/2026|2F":["Ana Clara (Ira. Andriele)","Anne (Ira. Aline e Ir. Cláudio)","Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Isadora Ashley"],"19/04/2026|4M":["Felipe (Auxiliar)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Kaique (Ir. Kleber)","Miguel (Ir. Kleber)","Murilo (Auxiliar)","Nicolas (Ira. Daiane)","Nicolas (Ira. Letícia)","Nicolas - Novo na igreja | Luan (amigo Guilherme) - Testemunhado","Robert (Auxiliar)","Samuel (Auxiliar)","Vitão (Ir. Marcelo & Ira. Léia)"],"11/01/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Daniel","Gabriel","Gabriel (Ira. Joyce & Ir. Cristiano)","Joaquim","Levi (Ir. Rafael & Ira. Samara)","Mathias","Vinicius"],"11/01/2026|1M":["Gael (Ir. Maurício & Ira. Kelly)","Levi (Ir. Thiago & Ira. Carol)"],"03/05/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Felipe (Auxiliar)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Robert (Auxiliar)","Samuel (Auxiliar)"],"01/02/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Isaac (Ira. Audrey)","Lucca (Primo da Milena - Jacareí - Visita)","Miguel (Kleber)","Miguel (Vila Maria)","Rodrigo (Ir. Ismael & Ira. Regina)","Vitão (Ir. Marcelo & Ira. Léia)"],"05/04/2026|4M":["Adriel e Juninho","Henrique (Ira. Rosana & Ir. Toninho)","Kaique (Ir. Kleber)","Murilo (Auxiliar)","Pedrão (Ira. Nayara)","Robert (Auxiliar)","Vinicius","visitas"],"08/02/2026|3F":["Ana Lívia (Ira. Juliana)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Valentina (Ira. Lidiane)"],"26/04/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Levi (Ir. Rafael & Ira. Samara)","Maurício (Ira. Andriele)","Murilo (Ira. Aline)"],"22/02/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Josué - São Vicente","Lucca (Ir. Rodrigo & Ira. Tati)","Rodrigo (Ir. Ismael & Ira. Regina)"],"11/01/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","João Pedro (Visita)","Lucca (Ir. Rodrigo & Ira. Tati)","Rodrigo (Ir. Ismael & Ira. Regina)","Samuel (Visita","Vitão (Ir. Marcelo & Ira. Léia)","vila industrial)"],"18/01/2026|2F":["Clarice (Ir. Letícia)","Euza (Ira. Delvânia)"],"11/01/2026|3F":["Ana Lívia (Ira. Juliana)","Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Rebeca (Ir. Maurício)"],"10/05/2026|3F":["Duda (Ira. Juliana / Ir. Flávio)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Rebeca (Ir. Maurício)"],"15/03/2026|3F":["Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Sara (Jd Valparaíba) Lara e Kyara ( testemunhadas )","Valentina (Ira. Lidiane)"],"01/03/2026|3M":["Lucca (Ir. Rodrigo & Ira. Tati)","Vitão (Ir. Marcelo & Ira. Léia)","Yuri"],"29/03/2026|1M":["Emanuel - Testemunhado | Theo - Visita | Pedro Lucca - Testemunhado","Henry (Ir. Daniel & Ira. Gabriela)","João (Primo do Murilo - Jacareí)","Mateus (Ir. Rafael & Ira. Samara)"],"05/04/2026|3F":["Heloísa (Ira. Ione - Vila Maria)","Nicole (Ira. Aninha e Ir. Renan)","Sara ( Ir Noemi )"],"15/02/2026|2M":["Caio (Ir. Rodrigo & Ira. Tati)","Christian","Gabriel","Levi (Ir. Rafael & Ira. Samara)","Lucca (Ir. Wilson & Ira. Carla)","Maurício (Ira. Andriele)","Miguel","Miguel (Ira. Lene)"],"12/04/2026|1M":["Mateus (Ir. Rafael & Ira. Samara)","Visitas: Rubens e Murilo"],"18/01/2026|4M":["Arthur (Op. de Som)","Felipe (Auxiliar)","Gabriel (Ir. Bruno)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Matheus (Ira. Juliana)","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Robert (Auxiliar)","Samuel (Auxiliar)","Samuelzinho (Flauta - Ira. Adriana)","Victor   Marcos"],"18/01/2026|3M":["Lucca (Ir. Rodrigo & Ira. Tati)","Vitão (Ir. Marcelo & Ira. Léia)"],"10/05/2026|1F":["Alice (Ira. Paty)","Ester (Ira. Cláudia & Ir. Misael)","Isabelle (Ira. Aninha & Ir. Renan)"],"01/02/2026|2M":["Chrystian","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Joao","Joaquim","Levi (Ir. Rafael & Ira. Samara)","Mathias","Miguel (Ira. Lene)","Murilo (Ira. Aline)"],"01/03/2026|1F":["Alice (Ira. Paty)","Aurora (sobrinha do Murilo)","Isabelle (Ira. Aninha & Ir. Renan)"],"19/04/2026|1M":["Diego - Visita"],"10/05/2026|1M":["Davi","Mateus (Ir. Rafael & Ira. Samara)"],"29/03/2026|2F":["Clarice (Ir. Letícia)","Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Maria (Ir. Elias & Ira. Dani)","Maria Fernanda ( 1º vez)"],"25/01/2026|1F":["Alice (Ira. Jaqueline & Ir. Vinicius)","Alice (Ira. Paty)","Ester (Ira. Cláudia & Ir. Misael)","Gabriela (Ira. Suelen)","Isabelle (Ira. Aninha & Ir. Renan)"],"25/01/2026|1M":["Benício (Filho - Maigel)","Davi (Ira. Ariele & Ir. Rafael)","João (Primo do Murilo - Jacareí)","Mateus (Ir. Rafael & Ira. Samara)"],"19/04/2026|3F":["Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Isys (Ira. Bete)","Sara ( Ir Noemi )"],"11/01/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Felipe (Auxiliar)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Isaac (Jd. Califórnia - Jacareí)","Matheus (Ira. Juliana)","Murilo (Auxiliar)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Robert (Auxiliar)","Samuel (Auxiliar)"],"15/03/2026|1F":["Alice (Ira. Paty)","Maite (visita","Manuela (Ira. Thaís & Ir. Josimar)","amiga da Clarice)"],"03/05/2026|1M":["Murilo"],"04/01/2026|1M":["Joaquim - Jabaquara"],"19/04/2026|1F":["Elisa (Ira. Thaís & Ir. Anderson)","Ester (Ira. Cláudia & Ir. Misael)"],"05/04/2026|1F":["Aline ( Santa Maria)","Anna","Isabelle (Ira. Aninha & Ir. Renan)"],"03/05/2026|2F":["Euza (Ira. Delvânia)","Helena (Ira. Daiane)","Rebeca (Ira. Denise)"],"08/02/2026|1M":["José ( Ira. Bárbara)"],"08/03/2026|1M":["Benício (Filho - Maigel)","Henry (Ir. Daniel & Ira. Gabriela)","João (Primo do Murilo - Jacareí)","Mateus (Ir. Rafael & Ira. Samara)","Rafael e Gabriel - Morumbi | Murilo - ?"],"11/01/2026|4F":["Alexia (Testemunhada - Amiga da Gabriela","Duda (Ira. Zilá)","Débora (Auxiliar)","Estella (Vila Industrial - Ira. Adriana)","Evelyn Nicole (Namorada do Robert)","Gabriela (Enfermeira - VIla Industrial)","Isabela (Auxiliar)","Isabela (Jd. Sta. Inês)","Luiza Borsoi","Mari Miranda (Auxiliar)","Mariana (Prima da Luíza - Jd. Califórnia - Jacareí)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Novo Horizonte)","Rafaela R.","Sabrina (Auxiliar)"],"10/05/2026|4F":["Débora (Auxiliar)","Isabela (Auxiliar)","Júlia Leite (Ira. Olga)","Luiza Borsoi","Mari Miranda (Auxiliar)","Mariana (Prima da Luíza - Jd. Califórnia - Jacareí)","Milena (Auxiliar)","Nicoly (Ira. Bete & Ir. Alexandre)","Rafaela R.","Solange"],"15/02/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Felipe","Felipe - visita","Lucca (Ir. Rodrigo & Ira. Tati)","Rodrigo (Ir. Ismael & Ira. Regina)","Vitão (Ir. Marcelo & Ira. Léia)"],"25/01/2026|3F":["Ana Lívia (Ira. Juliana)","Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Gabriela (Ira. Kelly)","Isys (Ira. Bete)","Manu ( Galo Branco )","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Sara (Ira. Lene)"],"04/01/2026|3F":["Ana Lívia (Ira. Juliana)","Gabriela (Ira. Ana Paula)","Milena (Ira. Joyce)","Valentina (Ira. Lidiane)"],"03/05/2026|1F":["Alice (Ira. Jaqueline & Ir. Vinicius)","Elisa (Ira. Thaís & Ir. Anderson)","Isabelle (Ira. Aninha & Ir. Renan)","Manuela (Ira. Thaís & Ir. Josimar)"],"15/02/2026|3F":["Ana Lívia (Ira. Juliana)","Belinha (Ira. Ana Paula)","Gabriela (Ira. Ana Paula)","Milena (Ira. Joyce)","Nicole (Ira. Aninha e Ir. Renan)","Rebeca (Ir. Maurício)","Sara (Ira. Lene)","Sophia ( Jd São José )"],"25/01/2026|2M":["Bernardo (Ira. Suelen)","Caio (Ir. Rodrigo & Ira. Tati)","Gabriel (Ira. Joyce & Ir. Cristiano)","Heitor (Ira. Paty & Ir. Juninho)","Joao","Joao lucas","Levi (Ir. Rafael & Ira. Samara)","Lucca (Ir. Wilson & Ira. Carla)","Maurício (Ira. Andriele)","Miguel (Ira. Lene)","Murilo (Ira. Aline)","Pedrinho (Ir. Rafinha & Ira. Ariele)"],"22/03/2026|3F":["Ana Lívia (Ira. Juliana)","Gabriela (Ira. Kelly)","Heloísa (Ira. Ione - Vila Maria)","Isys (Ira. Bete)","Milena (Ira. Joyce)","Sara (Ira. Lene)","Sarah ( Ir Noemi )"],"22/03/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Lucca (Ir. Rodrigo & Ira. Tati)","Rodrigo (Ir. Ismael & Ira. Regina)","Yuri (Filho do Ir. Thiago)"],"19/04/2026|2F":["Euza (Ira. Delvânia)","Helena (Ira. Daiane)"],"10/05/2026|4M":["Arthur (Op. de Som)","Caio Gasparetti","Felipe (Auxiliar)","Guilherme (Auxiliar)","Henrique (Ira. Rosana & Ir. Toninho)","Hébert (Ir. Advânio & Ira. Priscila)","Ir. Nicolas que está aqui para estudar","Isaac (Jd. Califórnia - Jacareí)","Matheus (Ira. Juliana)","Miguel (Ira. Juliana)","Nicolas (Ira. Letícia)","Nicolas (Namorado - Luiza Borsoi)","Pedro Borsoi (Ira. Ju & Ir. Diogo)","Robert (Auxiliar)","Samuel (Auxiliar)"],"08/02/2026|3M":["Daniel (Ir. Ismael & Ira. Regina)","Lucca (Ir. Rodrigo & Ira. Tati)","Miguel (Ira. Juliana)","Rodrigo (Ir. Ismael & Ira. Regina)","Vitão (Ir. Marcelo & Ira. Léia)"]};
+
+const COOP_PIN='2026';
+const AUX_USERS={
+  'guilherme':{nome:'Guilherme',fila:'1M'},
+  'samuel':{nome:'Samuel',fila:'2M'},
+  'felipe':{nome:'Felipe',fila:'3M'},
+  'robert':{nome:'Robert',fila:'4M'},
+  'debora':{nome:'Débora',fila:'1F'},
+  'milena':{nome:'Milena',fila:'2F'},
+  'sabrina':{nome:'Sabrina',fila:'3F'},
+  'mari':{nome:'Mari Miranda',fila:'4F'},
+  'isabela':{nome:'Isabela',fila:'4F'},
+  'auxiliar':{nome:'Auxiliar (todas as filas)',fila:'all'}
+};
+
+let currentRole='auxiliar',currentUser=null,presencas={},generoAux='M',rankFilt='todos';
+
+function getToday(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+
+function getUltimaReuniao(){
+  const hoje=getToday();
+  const passados=DOMINGOS.filter(d=>dateLE(d,hoje));
+  return passados.length?passados[passados.length-1]:DOMINGOS[0];
+}
+
+function getPresentes(data,fila){return presencas[`${data}|${fila}`]||[];}
+function totalApp(data){return Object.keys(MEMBROS).reduce((s,k)=>s+getPresentes(data,k).length,0);}
+
+function selectRole(role,btn){
+  currentRole=role;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  renderLoginFields();
+}
+
+function renderLoginFields(){
+  const el=document.getElementById('login-fields');
+  if(currentRole==='auxiliar'){
+    el.innerHTML=`<div class="input-group"><label>Seu nome</label><select id="aux-user"><option value="">Selecione...</option>${Object.entries(AUX_USERS).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join('')}</select></div>`;
+  } else {
+    el.innerHTML=`<div class="input-group"><label>PIN do Cooperador</label><input type="password" id="coop-pin" placeholder="••••" maxlength="8"></div>`;
+  }
+}
+
+function doLogin(){
+  const err=document.getElementById('login-err');err.textContent='';
+  if(currentRole==='auxiliar'){
+    const sel=document.getElementById('aux-user');
+    if(!sel||!sel.value){err.textContent='Selecione seu nome.';return;}
+    currentUser={role:'auxiliar',...AUX_USERS[sel.value],key:sel.value};
+  } else {
+    const pin=document.getElementById('coop-pin');
+    if(!pin||pin.value!==COOP_PIN){err.textContent='PIN incorreto.';return;}
+    currentUser={role:'cooperador',nome:'Cooperador de Jovens'};
+  }
+  enterApp();
+}
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-badge').textContent=currentUser.nome;
+  const ultima=getUltimaReuniao();
+  buildDateSelects(ultima);
+  if(currentUser.role==='cooperador'){
+    document.getElementById('coop-nav').style.display='flex';
+    showScreen('painel');renderPainel();
+  } else {
+    document.getElementById('coop-nav').style.display='none';
+    showScreen('auxiliar');
+    const f=currentUser.fila;
+    if(f!=='all') generoAux=f.endsWith('M')?'M':'F';
+    document.getElementById('aux-f-m').className='filter-btn'+(generoAux==='M'?' on':'');
+    document.getElementById('aux-f-f').className='filter-btn'+(generoAux==='F'?' on':'');
+    renderFilasAux();
+  }
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-err').textContent='';
+  renderLoginFields();
+}
+
+function buildDateSelects(defaultDate){
+  const hoje=getToday();
+  let opts='';
+  [...DOMINGOS].reverse().forEach(d=>{opts+=`<option value="${d}">${d}${d===hoje?' (hoje)':''}</option>`;});
+  ['aux-data','painel-data'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.innerHTML=opts;el.value=defaultDate||getUltimaReuniao();}
+  });
+}
+
+function setGenero(g){
+  generoAux=g;
+  document.getElementById('aux-f-m').className='filter-btn'+(g==='M'?' on':'');
+  document.getElementById('aux-f-f').className='filter-btn'+(g==='F'?' on':'');
+  renderFilasAux();
+}
+
+function renderFilasAux(){
+  const data=document.getElementById('aux-data').value;
+  const fu=currentUser?.fila||'all';
+  let filas=Object.entries(MEMBROS).filter(([k])=>k.endsWith(generoAux));
+  if(fu!=='all') filas=filas.filter(([k])=>k===fu);
+  let html='';
+  filas.forEach(([key,fila])=>{
+    const pres=getPresentes(data,key);
+    const membrosAtuais=getMembrosAtuais(key);
+    const pct=membrosAtuais.length?Math.round(pres.length/membrosAtuais.length*100):0;
+    const bCls=generoAux==='M'?'badge-m':'badge-f';
+    const dotCls=generoAux==='M'?'dot-m':'dot-f';
+    // Botão de subir fila: só para o auxiliar dono da fila, e só se houver próxima fila
+    const podeMovar = (fu===key) && !!PROX_FILA[key];
+    const proxLabel = PROX_FILA[key] ? LABEL_FILA_CURTA[PROX_FILA[key]] : '';
+    html+=`<div class="fila-block">
+      <div class="fila-head" onclick="toggleFila('fl-${key}','chev-${key}')">
+        <div class="fila-head-left"><div class="fila-dot ${dotCls}"></div><div><div class="fila-name">${fila.label}</div><div class="fila-aux">Aux: ${fila.aux} · ${fila.faixa}</div></div></div>
+        <div class="fila-right"><span class="badge ${bCls}" id="badge-${key}">${pres.length}/${membrosAtuais.length}</span><span class="chevron" id="chev-${key}">▼</span></div>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" id="prog-${key}" style="width:${pct}%"></div></div>
+      <div class="member-list" id="fl-${key}">
+        ${membrosAtuais.map(m=>{
+          const mEsc=m.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+          const movBtn=podeMovar
+            ? `<button class="member-move-btn" onclick="event.preventDefault();event.stopPropagation();pedirMudancaFila('${key}','${mEsc}')" title="Mover para ${proxLabel}">↑ ${proxLabel}</button>`
+            : '';
+          return `<label class="member-row"><input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)"><span class="member-name">${m}</span>${movBtn}</label>`;
+        }).join('')}
+        <label class="member-row" style="margin-top:4px;border-top:1px dashed var(--border);padding-top:6px"><input type="checkbox" class="member-cb" onchange="addVisita('${key}',this)"><span class="member-name member-visita">+ Adicionar visita / nome extra</span></label>
+      </div>
+    </div>`;
+  });
+  document.getElementById('aux-filas').innerHTML=html||'<div class="empty">Nenhuma fila neste filtro.</div>';
+  updateAuxCount();
+}
+
+function toggleFila(lid,cid){document.getElementById(lid)?.classList.toggle('open');document.getElementById(cid)?.classList.toggle('open');}
+
+function toggleM(fila,nome,checked){
+  const data=document.getElementById('aux-data').value;
+  const key=`${data}|${fila}`;
+  if(!presencas[key]) presencas[key]=[];
+  if(checked){if(!presencas[key].includes(nome)) presencas[key].push(nome);}
+  else{presencas[key]=presencas[key].filter(n=>n!==nome);}
+  const pres=presencas[key].length,total=getMembrosAtuais(fila).length;
+  const b=document.getElementById(`badge-${fila}`);if(b) b.textContent=`${pres}/${total}`;
+  const p=document.getElementById(`prog-${fila}`);if(p) p.style.width=`${total?Math.round(pres/total*100):0}%`;
+  updateAuxCount();
+}
+
+function addVisita(fila,cb){
+  if(!cb.checked) return;
+  const nome=prompt('Nome da visita ou membro não listado:');cb.checked=false;
+  if(!nome?.trim()) return;
+  const n=nome.trim(),data=document.getElementById('aux-data').value,key=`${data}|${fila}`;
+  if(!presencas[key]) presencas[key]=[];
+  if(!presencas[key].includes(n)) presencas[key].push(n);
+  renderFilasAux();
+  document.getElementById(`fl-${fila}`)?.classList.add('open');
+  document.getElementById(`chev-${fila}`)?.classList.add('open');
+}
+
+function updateAuxCount(){
+  const data=document.getElementById('aux-data')?.value;if(!data) return;
+  let t=0;Object.keys(MEMBROS).forEach(k=>{t+=getPresentes(data,k).length;});
+  const el=document.getElementById('aux-count');if(el) el.textContent=`${t} presente(s) registrado(s)`;
+}
+
+async function salvarPresenca(){
+  await saveData();
+  const el=document.getElementById('aux-alert');
+  el.innerHTML=`<div class="alert alert-ok">✅ Presença salva com sucesso para ${document.getElementById('aux-data').value}!</div>`;
+  setTimeout(()=>el.innerHTML='',3000);
+}
+
+function renderPainel(){
+  const data=document.getElementById('painel-data').value;
+  renderOficialBox(data);
+  const AK=Object.keys(MEMBROS);
+  let total=0,filasOk=0,html='';
+  AK.forEach(key=>{
+    const fila=MEMBROS[key],pres=getPresentes(data,key);
+    total+=pres.length;if(pres.length>0) filasOk++;
+    const pct=fila.membros.length?Math.round(pres.length/fila.membros.length*100):0;
+    const bCls=fila.genero==='M'?'badge-m':'badge-f',dotCls=fila.genero==='M'?'dot-m':'dot-f';
+    const status=pres.length>0?'<span class="badge badge-ok">✓ Enviado</span>':'<span class="badge badge-gap">⚠ Pendente</span>';
+    html+=`<div class="fila-block">
+      <div class="fila-head" onclick="toggleFila('pf-${key}','pchev-${key}')">
+        <div class="fila-head-left"><div class="fila-dot ${dotCls}"></div><div><div class="fila-name">${fila.label}</div><div class="fila-aux">Aux: ${fila.aux} · ${fila.faixa}</div></div></div>
+        <div class="fila-right">${status}<span class="badge ${bCls}">${pres.length}/${fila.membros.length}</span><span class="chevron" id="pchev-${key}">▼</span></div>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+      <div class="member-list" id="pf-${key}">${pres.length>0?`<div style="padding:.5rem .25rem;font-size:12px;color:var(--muted);line-height:1.8">${pres.join(', ')}</div>`:`<div style="padding:.75rem .25rem;font-size:12px;color:var(--hint);font-style:italic">Nenhum registro. Auxiliar ${fila.aux} ainda não enviou.</div>`}</div>
+    </div>`;
+  });
+  const oficial=TOTAL_OFICIAL_2026[data]||null,appHoje=totalApp(data);
+  const vals26=Object.values(TOTAL_OFICIAL_2026);
+  const media26=vals26.length?Math.round(vals26.reduce((a,b)=>a+b,0)/vals26.length):0;
+  document.getElementById('painel-stats').innerHTML=`
+    <div class="stat"><div class="stat-val">${oficial??appHoje}</div><div class="stat-lbl">Presentes nesta data</div><div class="stat-sub">${oficial?'total oficial':'lançado no app'}</div></div>
+    <div class="stat"><div class="stat-val">${filasOk}/8</div><div class="stat-lbl">Filas com registro</div></div>
+    <div class="stat"><div class="stat-val">${media26||'—'}</div><div class="stat-lbl">Média 2026</div><div class="stat-sub">${vals26.length} reuniões</div></div>`;
+  document.getElementById('painel-filas').innerHTML=html;
+}
+
+function renderGaps(){
+  const AK=Object.keys(MEMBROS),ultima=getUltimaReuniao();
+  const passados=DOMINGOS.filter(d=>dateLE(d,ultima));
+  const gaps=passados.map(d=>({d,faltando:AK.filter(k=>getPresentes(d,k).length===0)})).filter(x=>x.faltando.length>0);
+  if(!gaps.length){document.getElementById('gaps-list').innerHTML='<div class="empty">✅ Nenhuma pendência!</div>';return;}
+  let html=`<div class="alert alert-warn">⚠️ ${gaps.length} data(s) com filas pendentes.</div>`;
+  html+=[...gaps].reverse().map(({d,faltando})=>{
+    const oficial=TOTAL_OFICIAL_2026[d]??null,app=totalApp(d);
+    const diff=oficial!=null?oficial-app:null;
+    const tags=faltando.map(k=>`<span class="gap-tag">${MEMBROS[k].label.split('—')[0].trim()} · ${MEMBROS[k].aux}</span>`).join('');
+    const diffStr=diff!=null&&diff>0?` <span style="color:var(--red);font-weight:600">−${diff} não lançados</span>`:'';
+    return`<div class="gap-item"><div class="gap-top"><span class="gap-date">📅 ${d}</span><span style="font-size:11px;color:var(--muted)">Oficial: <b>${oficial??'—'}</b> · App: <b>${app}</b>${diffStr}</span></div><div class="gap-filas">${tags}</div></div>`;
+  }).join('');
+  document.getElementById('gaps-list').innerHTML=html;
+}
+
+function renderHistorico(){
+  const ultima=getUltimaReuniao();
+  const passados=DOMINGOS.filter(d=>dateLE(d,ultima)&&TOTAL_OFICIAL_2026[d]!=null);
+  if(!passados.length){document.getElementById('hist-list').innerHTML='<div class="empty">Sem dados ainda.</div>';return;}
+
+  const vals26=passados.map(d=>TOTAL_OFICIAL_2026[d]);
+  const media26=Math.round(vals26.reduce((a,b)=>a+b,0)/vals26.length);
+  const vals25all=Object.values(TOTAL_OFICIAL_2025);
+  const media25=Math.round(vals25all.reduce((a,b)=>a+b,0)/vals25all.length);
+  const max26=Math.max(...vals26),min26=Math.min(...vals26);
+  const ultimo26=vals26[vals26.length-1],penult=vals26.length>1?vals26[vals26.length-2]:null;
+  const tend=penult!=null?ultimo26-penult:0;
+  const vsMed=media26-media25,vmPct=Math.abs(Math.round(vsMed/media25*100));
+
+  // Trend cards
+  document.getElementById('trend-cards').innerHTML=`
+    <div class="trend-card"><div class="trend-label">Média 2026 (${vals26.length} reuniões)</div><div class="trend-val">${media26}</div><div class="trend-cmp ${vsMed>=0?'trend-up':'trend-dn'}">${vsMed>=0?'▲':'▼'} ${vmPct}% vs 2025 (média ${media25})</div></div>
+    <div class="trend-card"><div class="trend-label">Última reunião (${passados[passados.length-1]})</div><div class="trend-val">${ultimo26}</div><div class="trend-cmp ${tend>0?'trend-up':tend<0?'trend-dn':'trend-eq'}">${tend>0?'▲ +'+tend:tend<0?'▼ '+tend:'= igual'} vs anterior</div></div>
+    <div class="trend-card"><div class="trend-label">Máximo 2026</div><div class="trend-val">${max26}</div><div class="trend-cmp trend-eq">${passados[vals26.indexOf(max26)]}</div></div>
+    <div class="trend-card"><div class="trend-label">Mínimo 2026</div><div class="trend-val">${min26}</div><div class="trend-cmp trend-eq">${passados[vals26.indexOf(min26)]}</div></div>`;
+
+  // Tabela de barras
+  document.getElementById('hist-list').innerHTML='<div id="hist-tabela"></div>';
+  const maxAll=Math.max(max26,...vals25all);
+  const rows=[...passados].reverse().map(d=>{
+    const v26=TOTAL_OFICIAL_2026[d];
+    const app=totalApp(d);
+    const v25=MAPA_V25[d]??null;
+    const AK=Object.keys(MEMBROS);
+    const gapCnt=AK.filter(k=>getPresentes(d,k).length===0).length;
+    const w26=Math.round(v26/maxAll*100);
+    const w25=v25!=null?Math.round(v25/maxAll*100):0;
+    const wApp=(app>0&&app<v26)?Math.round(app/maxAll*100):0;
+    const gapIcon=gapCnt>0?`<span style="font-size:10px;color:var(--amber);margin-left:3px">⚠${gapCnt}</span>`:'';
+    // Valores à direita: "oficial · app · (2025)"
+    const numStr=`<span style="font-weight:700;color:var(--teal-d)">${v26}</span>`
+      +`<span style="color:var(--hint);font-size:10px;margin-left:4px">app:${app}</span>`
+      +(v25!=null?`<span style="color:#185FA5;font-size:10px;margin-left:4px">'25:${v25}</span>`:'')
+      +gapIcon;
+    return`<div class="hist-row">
+      <span class="hist-date">${d.slice(0,5)}</span>
+      <div class="hist-bars">
+        <div style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--hint);margin-bottom:1px"><span style="width:40px;color:var(--teal-d)">2026</span><div class="hist-bar-wrap" style="flex:1"><div class="hist-bar-fill bar-2026" style="width:${w26}%"></div></div></div>
+        ${v25!=null?`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--hint);margin-bottom:1px"><span style="width:40px;color:#185FA5">2025</span><div class="hist-bar-wrap" style="flex:1"><div class="hist-bar-fill bar-2025" style="width:${w25}%"></div></div></div>`:''}
+        ${wApp>0?`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--hint)"><span style="width:40px">app</span><div class="hist-bar-wrap" style="flex:1"><div class="hist-bar-fill bar-2026" style="width:${wApp}%;opacity:.35"></div></div></div>`:''}
+      </div>
+      <div class="hist-nums">${numStr}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('hist-tabela').innerHTML=rows;
+}
+
+function buildRankFilters(){
+  let btns=`<button class="filter-btn on" id="rf-todos" onclick="setRankFilt('todos')">Todos</button>`;
+  Object.keys(MEMBROS).forEach(k=>{
+    const s=MEMBROS[k].label.replace('— Meninos','').replace('— Meninas','').replace('— Moços','').replace('— Moças','').replace('Fila','F.').trim();
+    btns+=`<button class="filter-btn" id="rf-${k}" onclick="setRankFilt('${k}')">${s}</button>`;
+  });
+  document.getElementById('rank-filters').innerHTML=btns;
+}
+
+function setRankFilt(f){
+  rankFilt=f;
+  document.querySelectorAll('[id^="rf-"]').forEach(b=>b.className='filter-btn');
+  document.getElementById('rf-'+f)?.classList.add('on');
+  renderRanking();
+}
+
+function renderRanking(){
+  const counts={};
+  DOMINGOS.forEach(d=>{Object.keys(MEMBROS).forEach(key=>{getPresentes(d,key).forEach(m=>{const mk=`${key}||${m}`;counts[mk]=(counts[mk]||0)+1;});});});
+  let entries=Object.entries(counts).map(([mk,c])=>{const[key,nome]=mk.split('||');return{key,nome,c};});
+  if(rankFilt!=='todos') entries=entries.filter(e=>e.key===rankFilt);
+  entries.sort((a,b)=>b.c-a.c);
+  if(!entries.length){document.getElementById('rank-list').innerHTML='<div class="empty">Nenhum dado.</div>';return;}
+  document.getElementById('rank-list').innerHTML=entries.slice(0,60).map(({key,nome,c},i)=>`
+    <div class="rank-row"><span class="rank-n">${i+1}</span><span class="rank-name">${nome}</span><span class="rank-fila">${MEMBROS[key]?.label?.split('—')[1]?.trim()||key}</span><span class="rank-cnt">${c}×</span></div>`).join('');
+}
+
+function showScreen(name){
+  ['auxiliar','painel','gaps','historico','ranking'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
+}
+
+function goTab(tab,btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  showScreen(tab);
+  if(tab==='painel') renderPainel();
+  else if(tab==='gaps') renderGaps();
+  else if(tab==='historico') renderHistorico();
+  else if(tab==='ranking'){buildRankFilters();renderRanking();}
+}
+
+// ─── MUDANÇA DE FILA ─────────────────────────────────────────────────────────
+// Mapa de próxima fila: 1M->2M, 2M->3M, 3M->4M, 1F->2F, 2F->3F, 3F->4F
+const PROX_FILA = {'1M':'2M','2M':'3M','3M':'4M','1F':'2F','2F':'3F','3F':'4F'};
+const LABEL_FILA_CURTA = {'1M':'1ª Meninos','2M':'2ª Meninos','3M':'3ª Moços','4M':'4ª Moços','1F':'1ª Meninas','2F':'2ª Meninas','3F':'3ª Moças','4F':'4ª Moças'};
+
+// Mudanças de fila persistidas: {nome_original: {de: filaKey, para: filaKey}}
+let mudancasFila = {};
+
+async function loadMudancasFila(){
+  try{
+    const r = await window._fbGet('mudancas_fila');
+    if(r) mudancasFila = JSON.parse(r);
+  }catch(e){}
+}
+
+async function saveMudancasFila(){
+  try{ await window._fbSet('mudancas_fila', JSON.stringify(mudancasFila)); }catch(e){}
+}
+
+// Retorna a lista de membros de uma fila considerando as mudanças
+function getMembrosAtuais(filaKey){
+  const originais = MEMBROS[filaKey].membros;
+  // Remover os que saíram desta fila
+  const ficam = originais.filter(m => {
+    const mov = mudancasFila[m];
+    return !mov || mov.de !== filaKey;
+  });
+  // Adicionar os que vieram de outra fila
+  const chegaram = [];
+  Object.entries(mudancasFila).forEach(([nome, mov]) => {
+    if(mov.para === filaKey && !ficam.includes(nome) && !chegaram.includes(nome)){
+      chegaram.push(nome);
+    }
+  });
+  // Juntar e ordenar alfabeticamente
+  return [...ficam, ...chegaram].sort((a,b) => a.localeCompare(b,'pt-BR'));
+}
+
+function pedirMudancaFila(filaKey, nome){
+  const proxKey = PROX_FILA[filaKey];
+  if(!proxKey) return;
+  const proxLabel = LABEL_FILA_CURTA[proxKey];
+  const filaLabel = LABEL_FILA_CURTA[filaKey];
+
+  // Criar modal
+  const overlay = document.createElement('div');
+  overlay.className = 'move-modal-overlay';
+  overlay.id = 'move-modal-overlay';
+  overlay.innerHTML = `
+    <div class="move-modal">
+      <div class="move-modal-title">↑ Mudar de fila</div>
+      <div class="move-modal-sub">
+        Mover <b>${nome}</b><br>
+        de <b>${filaLabel}</b> → <b>${proxLabel}</b>?<br><br>
+        <span style="font-size:11px;color:var(--hint)">O nome sairá desta fila e aparecerá na ${proxLabel} em ordem alfabética. Esta ação pode ser desfeita pelo administrador.</span>
+      </div>
+      <div class="move-modal-btns">
+        <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmarMudanca('${filaKey}','${proxKey}','${nome.replace(/'/g,"\'")}')">Confirmar mudança</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) fecharModal(); });
+}
+
+function fecharModal(){
+  document.getElementById('move-modal-overlay')?.remove();
+}
+
+async function confirmarMudanca(de, para, nome){
+  mudancasFila[nome] = {de, para};
+  await saveMudancasFila();
+  fecharModal();
+  renderFilasAux(); // re-render para refletir a mudança
+  // Manter a fila aberta
+  document.getElementById(`fl-${de}`)?.classList.add('open');
+  document.getElementById(`chev-${de}`)?.classList.add('open');
+}
+
+async function loadData(){
+  // Mostrar loading enquanto carrega do Firebase
+  document.getElementById('login-screen').innerHTML += '<div id="fb-loading" style="position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:8px 18px;border-radius:99px;font-size:12px;z-index:999">🔄 Conectando ao banco de dados...</div>';
+  try{
+    const r = await window._fbGet('presencas');
+    if(r) presencas = JSON.parse(r);
+  }catch(e){}
+  Object.entries(HISTORICO_IMPORTADO).forEach(([key,nomes])=>{
+    if(!presencas[key]){presencas[key]=nomes;}
+    else{const s=new Set(presencas[key]);nomes.forEach(n=>s.add(n));presencas[key]=[...s];}
+  });
+  await loadTotaisOficiais();
+  await loadMudancasFila();
+  document.getElementById('fb-loading')?.remove();
+}
+
+async function saveData(){
+  try{ await window._fbSet('presencas', JSON.stringify(presencas)); }catch(e){}
+}
+
+// Totais oficiais editáveis pelo Cooperador (sobrepõem os hardcoded)
+let totaisOficiais = Object.assign({}, TOTAL_OFICIAL_2026);
+
+async function loadTotaisOficiais(){
+  try{
+    const r = await window._fbGet('totais_oficiais');
+    if(r){
+      const saved = JSON.parse(r);
+      Object.assign(totaisOficiais, saved);
+      Object.assign(TOTAL_OFICIAL_2026, saved);
+    }
+  }catch(e){}
+}
+
+async function saveTotalOficial(data, valor){
+  totaisOficiais[data] = valor;
+  TOTAL_OFICIAL_2026[data] = valor;
+  try{ await window._fbSet('totais_oficiais', JSON.stringify(totaisOficiais)); }catch(e){}
+}
+
+function renderOficialBox(data){
+  const box = document.getElementById('painel-oficial-box');
+  if(!box) return;
+  const val = TOTAL_OFICIAL_2026[data] ?? '';
+  const isNovo = !TOTAL_OFICIAL_2026[data];
+  box.innerHTML = `
+    <div class="oficial-box">
+      <label>🎯 Total oficial de recitativos:</label>
+      <input class="oficial-input" type="number" id="oficial-input" value="${val}" min="0" max="500" placeholder="—">
+      <button class="btn-oficial" onclick="submitOficial()">Salvar</button>
+      <span class="oficial-saved" id="oficial-saved">✓ Salvo!</span>
+      ${isNovo ? '<span style="font-size:11px;color:var(--amber);margin-left:4px">⚠ Ainda não lançado</span>' : ''}
+    </div>`;
+}
+
+async function submitOficial(){
+  const data = document.getElementById('painel-data').value;
+  const input = document.getElementById('oficial-input');
+  const val = parseInt(input.value);
+  if(isNaN(val) || val < 0){ input.style.borderColor='var(--red)'; return; }
+  input.style.borderColor='var(--teal)';
+  await saveTotalOficial(data, val);
+  // Feedback visual
+  const saved = document.getElementById('oficial-saved');
+  saved.classList.add('show');
+  setTimeout(()=>saved.classList.remove('show'), 2000);
+  // Re-renderizar painel com novo valor
+  renderPainel();
+}
+
+renderLoginFields();
+// Aguarda Firebase carregar antes de liberar o app
+(async()=>{ await loadData(); })();
+</script>
+</body>
+</html>
