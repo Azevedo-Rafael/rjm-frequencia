@@ -134,6 +134,35 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
 .sel-count{font-size:12px;color:var(--muted)}
 .btn-save{padding:9px 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
 .btn-save:hover{background:var(--teal-d)}.empty{text-align:center;color:var(--hint);font-size:13px;padding:2rem}
+.visita-section{margin-top:.75rem;padding-top:.75rem;border-top:2px dashed var(--border)}
+.visita-section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;padding:0 8px}
+.visita-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;font-size:12px}
+.visita-nome{flex:1;color:var(--text);font-style:italic}
+.visita-add-row{display:flex;gap:6px;padding:4px 8px;margin-top:4px}
+.visita-input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;outline:none}
+.visita-input:focus{border-color:var(--teal)}
+.btn-visita-add{padding:6px 12px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;white-space:nowrap}
+.pending-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-right:5px;vertical-align:middle}
+.membros-screen .fila-block{margin-bottom:.5rem}
+.membro-manage-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12px;transition:background .1s}
+.membro-manage-row:hover{background:var(--bg)}
+.membro-manage-name{flex:1;color:var(--text)}
+.btn-remove-membro{padding:3px 9px;font-size:10px;font-weight:600;border:1px solid var(--red-l);border-radius:99px;background:transparent;color:var(--red);cursor:pointer}
+.btn-remove-membro:hover{background:var(--red-l)}
+.add-membro-box{display:flex;gap:8px;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.add-membro-input{flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.add-membro-input:focus{border-color:var(--teal)}
+.add-membro-sel{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);outline:none}
+.btn-add-membro{padding:8px 16px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.visita-painel-item{display:flex;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;gap:8px}
+.visita-painel-item:last-child{border:none}
+.visita-painel-nome{flex:1;color:var(--text)}
+.visita-painel-fila{font-size:10px;color:var(--hint);white-space:nowrap}
+.visita-painel-actions{display:flex;gap:4px;flex-shrink:0}
+.btn-visita-edit{padding:3px 8px;font-size:10px;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer}
+.btn-visita-edit:hover{background:var(--bg)}
+.btn-visita-promote{padding:3px 8px;font-size:10px;font-weight:600;border:1px solid var(--teal);border-radius:99px;background:var(--teal-l);color:var(--teal-d);cursor:pointer}
+.btn-visita-discard{padding:3px 8px;font-size:10px;border:1px solid var(--red-l);border-radius:99px;background:transparent;color:var(--red);cursor:pointer}
 .oficial-box{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;background:var(--teal-l);border:1px solid var(--teal);border-radius:10px;margin-bottom:.75rem}
 .oficial-box label{font-size:12px;font-weight:600;color:var(--teal-d);white-space:nowrap}
 .oficial-input{width:72px;padding:6px 10px;border:1px solid var(--teal);border-radius:7px;font-size:15px;font-weight:700;color:var(--teal-d);background:#fff;text-align:center;outline:none}
@@ -188,6 +217,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     <button class="nav-btn" onclick="goTab('gaps',this)">⚠️ Pendências</button>
     <button class="nav-btn" onclick="goTab('historico',this)">📅 Histórico</button>
     <button class="nav-btn" onclick="goTab('ranking',this)">🏆 Ranking</button>
+    <button class="nav-btn" onclick="goTab('membros',this)">👥 Membros</button>
   </div>
   <div id="screen-auxiliar" style="display:none">
     <div class="card"><div class="card-title">📅 Data da reunião</div><select class="date-sel" id="aux-data" onchange="renderFilasAux()"></select></div>
@@ -224,6 +254,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Gráfico de linha: laranja = 2025 · verde = 2026. Tabela: barra 2026 (topo), 2025 (meio), app (baixo).</div>
       <div id="hist-list"></div>
+    </div>
+  </div>
+  <div id="screen-membros" style="display:none">
+    <div class="card">
+      <div class="card-title">👥 Lista Mestra de Membros</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Adicione ou remova membros da lista oficial. As alterações refletem imediatamente para todos os auxiliares.</div>
+      <div class="add-membro-box">
+        <input class="add-membro-input" id="novo-membro-nome" placeholder="Nome completo (ex: João Pedro - Ir. Ricardo)" />
+        <select class="add-membro-sel" id="novo-membro-fila">
+          <option value="">Selecione a fila...</option>
+        </select>
+        <button class="btn-add-membro" onclick="adicionarMembro()">+ Adicionar</button>
+      </div>
+      <div id="membro-alert" style="margin-top:.5rem"></div>
+    </div>
+    <div id="membros-master-list"></div>
+    <div class="card" style="margin-top:.75rem">
+      <div class="card-title">👁️ Visitas pendentes de avaliação</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Visitas registradas pelos auxiliares. Edite o nome e promova para membro oficial, ou descarte.</div>
+      <div id="visitas-pendentes-list"></div>
     </div>
   </div>
   <div id="screen-ranking" style="display:none">
@@ -272,6 +322,8 @@ const AUX_USERS={
 };
 
 let currentRole='auxiliar',currentUser=null,presencas={},generoAux='M',rankFilt='todos';
+let membrosExtras = {};   // {filaKey: [nomes adicionados pelo cooperador]}
+let visitasPorData = {};  // {"data|fila": [{id, nome}]}
 
 function getToday(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 
@@ -344,12 +396,25 @@ function doLogout(){
 
 function buildDateSelects(defaultDate){
   const hoje=getToday();
-  let opts='';
-  [...DOMINGOS].reverse().forEach(d=>{opts+=`<option value="${d}">${d}${d===hoje?' (hoje)':''}</option>`;});
-  ['aux-data','painel-data'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){el.innerHTML=opts;el.value=defaultDate||getUltimaReuniao();}
+  const ultima=getUltimaReuniao();
+  // Para o select do auxiliar: marcar pendências da fila dele
+  const fuAux=currentUser?.fila||'all';
+  let optsAux='', optsCoop='';
+  [...DOMINGOS].reverse().forEach(d=>{
+    const lbl=d===hoje?' (hoje)':'';
+    // Verificar pendência para o auxiliar (só datas passadas)
+    let pendIcon='';
+    if(fuAux!=='all' && dateLE(d,ultima)){
+      const pres=getPresentes(d,fuAux);
+      if(pres.length===0) pendIcon='⚠ ';
+    }
+    optsAux+=`<option value="${d}">${pendIcon}${d}${lbl}</option>`;
+    optsCoop+=`<option value="${d}">${d}${lbl}</option>`;
   });
+  const elAux=document.getElementById('aux-data');
+  if(elAux){elAux.innerHTML=optsAux;elAux.value=defaultDate||ultima;}
+  const elCoop=document.getElementById('painel-data');
+  if(elCoop){elCoop.innerHTML=optsCoop;elCoop.value=defaultDate||ultima;}
 }
 
 function setGenero(g){
@@ -374,10 +439,14 @@ function renderFilasAux(){
     // Botão de subir fila: só para o auxiliar dono da fila, e só se houver próxima fila
     const podeMovar = (fu===key) && !!PROX_FILA[key];
     const proxLabel = PROX_FILA[key] ? LABEL_FILA_CURTA[PROX_FILA[key]] : '';
+    // Visitas já registradas nesta data/fila
+    const vkey=`${data}|${key}`;
+    const visitasNestaFila=(visitasPorData[vkey]||[]);
+    const totalComVisitas=pres.length;
     html+=`<div class="fila-block">
       <div class="fila-head" onclick="toggleFila('fl-${key}','chev-${key}')">
         <div class="fila-head-left"><div class="fila-dot ${dotCls}"></div><div><div class="fila-name">${fila.label}</div><div class="fila-aux">Aux: ${fila.aux} · ${fila.faixa}</div></div></div>
-        <div class="fila-right"><span class="badge ${bCls}" id="badge-${key}">${pres.length}/${membrosAtuais.length}</span><span class="chevron" id="chev-${key}">▼</span></div>
+        <div class="fila-right"><span class="badge ${bCls}" id="badge-${key}">${totalComVisitas}/${membrosAtuais.length}</span><span class="chevron" id="chev-${key}">▼</span></div>
       </div>
       <div class="prog-wrap"><div class="prog-bar" id="prog-${key}" style="width:${pct}%"></div></div>
       <div class="member-list" id="fl-${key}">
@@ -388,7 +457,18 @@ function renderFilasAux(){
             : '';
           return `<label class="member-row"><input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)"><span class="member-name">${m}</span>${movBtn}</label>`;
         }).join('')}
-        <label class="member-row" style="margin-top:4px;border-top:1px dashed var(--border);padding-top:6px"><input type="checkbox" class="member-cb" onchange="addVisita('${key}',this)"><span class="member-name member-visita">+ Adicionar visita / nome extra</span></label>
+        <div class="visita-section" id="visitas-section-${key}">
+          <div class="visita-section-title">👋 Visitas / Nome extra</div>
+          ${visitasNestaFila.map(v=>`
+            <div class="visita-row">
+              <input type="checkbox" class="member-cb" checked disabled>
+              <span class="visita-nome">${v.nome}</span>
+            </div>`).join('')}
+          <div class="visita-add-row">
+            <input class="visita-input" id="visita-input-${key}" placeholder="Nome da visita..." onkeydown="if(event.key==='Enter') submitVisita('${key}')">
+            <button class="btn-visita-add" onclick="submitVisita('${key}')">+ Adicionar</button>
+          </div>
+        </div>
       </div>
     </div>`;
   });
@@ -410,16 +490,41 @@ function toggleM(fila,nome,checked){
   updateAuxCount();
 }
 
-function addVisita(fila,cb){
-  if(!cb.checked) return;
-  const nome=prompt('Nome da visita ou membro não listado:');cb.checked=false;
+function addVisitaNome(fila, nome){
   if(!nome?.trim()) return;
-  const n=nome.trim(),data=document.getElementById('aux-data').value,key=`${data}|${fila}`;
-  if(!presencas[key]) presencas[key]=[];
-  if(!presencas[key].includes(n)) presencas[key].push(n);
+  const n=nome.trim(), data=document.getElementById('aux-data').value;
+  const vkey=`${data}|${fila}`;
+  if(!visitasPorData[vkey]) visitasPorData[vkey]=[];
+  // Evitar duplicata
+  if(visitasPorData[vkey].some(v=>v.nome===n)) return;
+  const id='v_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  visitasPorData[vkey].push({id, nome:n});
+  // Também contar como presente
+  const pkey=`${data}|${fila}`;
+  if(!presencas[pkey]) presencas[pkey]=[];
+  if(!presencas[pkey].includes(n)) presencas[pkey].push(n);
+  saveVisitasPorData();
+  saveData();
   renderFilasAux();
   document.getElementById(`fl-${fila}`)?.classList.add('open');
   document.getElementById(`chev-${fila}`)?.classList.add('open');
+}
+
+function addVisita(fila,cb){
+  if(!cb.checked) return;
+  cb.checked=false;
+  // Mostrar campo inline em vez de prompt
+  const section=document.getElementById(`visitas-section-${fila}`);
+  if(section) section.style.display='block';
+  document.getElementById(`visita-input-${fila}`)?.focus();
+}
+
+function submitVisita(fila){
+  const input=document.getElementById(`visita-input-${fila}`);
+  const nome=input?.value?.trim();
+  if(!nome) return;
+  addVisitaNome(fila, nome);
+  if(input) input.value='';
 }
 
 function updateAuxCount(){
@@ -462,7 +567,7 @@ function renderPainel(){
     <div class="stat"><div class="stat-val">${oficial??appHoje}</div><div class="stat-lbl">Presentes nesta data</div><div class="stat-sub">${oficial?'total oficial':'lançado no app'}</div></div>
     <div class="stat"><div class="stat-val">${filasOk}/8</div><div class="stat-lbl">Filas com registro</div></div>
     <div class="stat"><div class="stat-val">${media26||'—'}</div><div class="stat-lbl">Média 2026</div><div class="stat-sub">${vals26.length} reuniões</div></div>`;
-  document.getElementById('painel-filas').innerHTML=html;
+  document.getElementById('painel-filas').innerHTML=html+renderVisitasPainel(data);
 }
 
 function renderGaps(){
@@ -549,11 +654,53 @@ function setRankFilt(f){
   renderRanking();
 }
 
+function getFilaAtual(nome){
+  // Retorna a fila atual do membro (considera múltiplas mudanças)
+  const mov=mudancasFila[nome];
+  if(!mov) return null; // não mudou
+  // Pode ter mudado mais de uma vez: buscar recursivamente
+  let filaAtual=mov.para;
+  let seguro=0;
+  while(mudancasFila[nome] && seguro<10){
+    const prox=mudancasFila[nome];
+    if(prox) filaAtual=prox.para;
+    seguro++;
+    break; // por ora só 1 nível — expandir se necessário
+  }
+  return filaAtual;
+}
+
 function renderRanking(){
-  const counts={};
-  DOMINGOS.forEach(d=>{Object.keys(MEMBROS).forEach(key=>{getPresentes(d,key).forEach(m=>{const mk=`${key}||${m}`;counts[mk]=(counts[mk]||0)+1;});});});
-  let entries=Object.entries(counts).map(([mk,c])=>{const[key,nome]=mk.split('||');return{key,nome,c};});
+  // Contar presenças por nome (independente da fila)
+  const countsPorNome={};
+  const filaOriginal={};
+  DOMINGOS.forEach(d=>{
+    Object.keys(MEMBROS).forEach(key=>{
+      getPresentes(d,key).forEach(m=>{
+        if(!countsPorNome[m]) countsPorNome[m]=0;
+        countsPorNome[m]++;
+        if(!filaOriginal[m]) filaOriginal[m]=key; // primeira fila registrada
+      });
+    });
+  });
+
+  // Montar entries com fila atual (consolidada)
+  let entries=Object.entries(countsPorNome).map(([nome,c])=>{
+    const filaAtualMov=getFilaAtual(nome);
+    // Determinar fila para exibição: se mudou, usa fila atual; senão usa onde tem mais presenças
+    let filaExib=filaAtualMov||filaOriginal[nome]||'?';
+    // Se está em membrosExtras, atualizar fila
+    Object.entries(membrosExtras).forEach(([fk,nomes])=>{if(nomes.includes(nome)) filaExib=fk;});
+    return{key:filaExib, nome, c};
+  });
+
+  // Filtro por fila
   if(rankFilt!=='todos') entries=entries.filter(e=>e.key===rankFilt);
+  // Remover visitas (nomes que só aparecem em visitasPorData)
+  const todosVisitas=new Set(Object.values(visitasPorData).flatMap(arr=>arr.map(v=>v.nome)));
+  const todosOficiais=new Set(Object.values(MEMBROS).flatMap(f=>f.membros).concat(Object.values(membrosExtras).flat()));
+  entries=entries.filter(e=>todosOficiais.has(e.nome)||!todosVisitas.has(e.nome));
+
   entries.sort((a,b)=>b.c-a.c);
   if(!entries.length){document.getElementById('rank-list').innerHTML='<div class="empty">Nenhum dado.</div>';return;}
   document.getElementById('rank-list').innerHTML=entries.slice(0,60).map(({key,nome,c},i)=>`
@@ -561,7 +708,7 @@ function renderRanking(){
 }
 
 function showScreen(name){
-  ['auxiliar','painel','gaps','historico','ranking'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
+  ['auxiliar','painel','gaps','historico','ranking','membros'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
 }
 
 function goTab(tab,btn){
@@ -572,6 +719,7 @@ function goTab(tab,btn){
   else if(tab==='gaps') renderGaps();
   else if(tab==='historico') renderHistorico();
   else if(tab==='ranking'){buildRankFilters();renderRanking();}
+  else if(tab==='membros') renderMembros();
 }
 
 // ─── MUDANÇA DE FILA ─────────────────────────────────────────────────────────
@@ -601,15 +749,17 @@ function getMembrosAtuais(filaKey){
     const mov = mudancasFila[m];
     return !mov || mov.de !== filaKey;
   });
-  // Adicionar os que vieram de outra fila
+  // Adicionar os que vieram de outra fila (mudança de fila)
   const chegaram = [];
   Object.entries(mudancasFila).forEach(([nome, mov]) => {
     if(mov.para === filaKey && !ficam.includes(nome) && !chegaram.includes(nome)){
       chegaram.push(nome);
     }
   });
+  // Adicionar membros extras cadastrados pelo Cooperador
+  const extras = (membrosExtras[filaKey]||[]).filter(n=>!ficam.includes(n)&&!chegaram.includes(n));
   // Juntar e ordenar alfabeticamente
-  return [...ficam, ...chegaram].sort((a,b) => a.localeCompare(b,'pt-BR'));
+  return [...ficam, ...chegaram, ...extras].sort((a,b) => a.localeCompare(b,'pt-BR'));
 }
 
 function pedirMudancaFila(filaKey, nome){
@@ -654,16 +804,14 @@ async function confirmarMudanca(de, para, nome){
 }
 
 async function loadData(){
-  // Mostrar loading enquanto carrega do Firebase
   document.getElementById('login-screen').innerHTML += '<div id="fb-loading" style="position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:8px 18px;border-radius:99px;font-size:12px;z-index:999">🔄 Conectando ao banco de dados...</div>';
-  try{
-    const r = await window._fbGet('presencas');
-    if(r) presencas = JSON.parse(r);
-  }catch(e){}
+  try{const r=await window._fbGet('presencas');if(r) presencas=JSON.parse(r);}catch(e){}
   Object.entries(HISTORICO_IMPORTADO).forEach(([key,nomes])=>{
     if(!presencas[key]){presencas[key]=nomes;}
     else{const s=new Set(presencas[key]);nomes.forEach(n=>s.add(n));presencas[key]=[...s];}
   });
+  try{const r=await window._fbGet('membros_extras');if(r) membrosExtras=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('visitas_por_data');if(r) visitasPorData=JSON.parse(r);}catch(e){}
   await loadTotaisOficiais();
   await loadMudancasFila();
   document.getElementById('fb-loading')?.remove();
@@ -671,6 +819,12 @@ async function loadData(){
 
 async function saveData(){
   try{ await window._fbSet('presencas', JSON.stringify(presencas)); }catch(e){}
+}
+async function saveMembrosExtras(){
+  try{ await window._fbSet('membros_extras', JSON.stringify(membrosExtras)); }catch(e){}
+}
+async function saveVisitasPorData(){
+  try{ await window._fbSet('visitas_por_data', JSON.stringify(visitasPorData)); }catch(e){}
 }
 
 // Totais oficiais editáveis pelo Cooperador (sobrepõem os hardcoded)
@@ -721,6 +875,182 @@ async function submitOficial(){
   setTimeout(()=>saved.classList.remove('show'), 2000);
   // Re-renderizar painel com novo valor
   renderPainel();
+}
+
+// ─── TELA MEMBROS (COOPERADOR) ───────────────────────────────────────────────
+function renderMembros(){
+  // Popular select de filas
+  const sel=document.getElementById('novo-membro-fila');
+  if(sel && sel.options.length<=1){
+    Object.entries(MEMBROS).forEach(([k,f])=>{
+      const opt=document.createElement('option');
+      opt.value=k; opt.textContent=f.label;
+      sel.appendChild(opt);
+    });
+  }
+  // Lista mestra por fila
+  let html='';
+  Object.entries(MEMBROS).forEach(([key,fila])=>{
+    const membros=getMembrosAtuais(key);
+    html+=`<div class="fila-block" style="margin-bottom:.5rem">
+      <div class="fila-head" onclick="toggleFila('mf-${key}','mchev-${key}')">
+        <div class="fila-head-left">
+          <div class="fila-dot ${fila.genero==='M'?'dot-m':'dot-f'}"></div>
+          <div><div class="fila-name">${fila.label}</div><div class="fila-aux">${membros.length} membros</div></div>
+        </div>
+        <span class="chevron" id="mchev-${key}">▼</span>
+      </div>
+      <div class="member-list" id="mf-${key}">
+        ${membros.map(m=>`
+          <div class="membro-manage-row">
+            <span class="membro-manage-name">${m}</span>
+            <button class="btn-remove-membro" onclick="removerMembro('${key}','${m.replace(/'/g,"\'").replace(/"/g,'&quot;')}')">✕ Remover</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('membros-master-list').innerHTML=html;
+  renderVisitasPendentes();
+}
+
+async function adicionarMembro(){
+  const nome=document.getElementById('novo-membro-nome')?.value?.trim();
+  const fila=document.getElementById('novo-membro-fila')?.value;
+  const alertEl=document.getElementById('membro-alert');
+  if(!nome){alertEl.innerHTML='<div class="alert alert-warn">Digite o nome do membro.</div>';return;}
+  if(!fila){alertEl.innerHTML='<div class="alert alert-warn">Selecione a fila.</div>';return;}
+  if(!membrosExtras[fila]) membrosExtras[fila]=[];
+  if(getMembrosAtuais(fila).includes(nome)){
+    alertEl.innerHTML='<div class="alert alert-warn">Este nome já está na lista desta fila.</div>';
+    return;
+  }
+  membrosExtras[fila].push(nome);
+  await saveMembrosExtras();
+  document.getElementById('novo-membro-nome').value='';
+  document.getElementById('novo-membro-fila').value='';
+  alertEl.innerHTML=`<div class="alert alert-ok">✅ ${nome} adicionado à ${MEMBROS[fila].label}!</div>`;
+  setTimeout(()=>alertEl.innerHTML='',3000);
+  renderMembros();
+}
+
+async function removerMembro(filaKey, nome){
+  if(!confirm(`Remover "${nome}" da ${MEMBROS[filaKey].label}?
+
+Esta ação não afeta o histórico de presenças.`)) return;
+  // Remover de membrosExtras se estiver lá
+  if(membrosExtras[filaKey]){
+    membrosExtras[filaKey]=membrosExtras[filaKey].filter(n=>n!==nome);
+    await saveMembrosExtras();
+  }
+  // Se veio de mudança de fila, reverter
+  if(mudancasFila[nome]){
+    delete mudancasFila[nome];
+    await saveMudancasFila();
+  }
+  renderMembros();
+}
+
+function renderVisitasPendentes(){
+  // Coletar todas as visitas de todas as datas
+  const todas=[];
+  Object.entries(visitasPorData).forEach(([chave, visitas])=>{
+    const [data,fila]=chave.split('|');
+    visitas.forEach(v=>{
+      todas.push({...v, data, fila, chave});
+    });
+  });
+  if(!todas.length){
+    document.getElementById('visitas-pendentes-list').innerHTML='<div class="empty">Nenhuma visita registrada ainda.</div>';
+    return;
+  }
+  // Ordenar por data mais recente
+  todas.sort((a,b)=>dateCmp(b.data).localeCompare(dateCmp(a.data)));
+  const html=todas.map(v=>`
+    <div class="visita-painel-item" id="visita-item-${v.id}">
+      <div>
+        <div class="visita-painel-nome" id="visita-nome-${v.id}">${v.nome}</div>
+        <div class="visita-painel-fila">${v.data} · ${MEMBROS[v.fila]?.label||v.fila}</div>
+      </div>
+      <div class="visita-painel-actions">
+        <button class="btn-visita-edit" onclick="editarVisita('${v.id}','${v.chave}','${v.nome.replace(/'/g,"\'").replace(/"/g,'&quot;')}')">✏️ Editar</button>
+        <button class="btn-visita-promote" onclick="promoverVisita('${v.id}','${v.chave}','${v.fila}','${v.nome.replace(/'/g,"\'").replace(/"/g,'&quot;')}')">✅ Promover</button>
+        <button class="btn-visita-discard" onclick="descartarVisita('${v.id}','${v.chave}')">✕</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('visitas-pendentes-list').innerHTML=html;
+}
+
+function editarVisita(id, chave, nomeAtual){
+  const nomeEl=document.getElementById(`visita-nome-${id}`);
+  if(!nomeEl) return;
+  nomeEl.innerHTML=`<input style="border:1px solid var(--teal);border-radius:6px;padding:4px 8px;font-size:12px;width:100%;outline:none" 
+    value="${nomeAtual}" id="visita-edit-input-${id}"
+    onkeydown="if(event.key==='Enter') salvarEdicaoVisita('${id}','${chave}')">
+    <button onclick="salvarEdicaoVisita('${id}','${chave}')" style="margin-top:4px;padding:3px 10px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer">Salvar</button>`;
+  document.getElementById(`visita-edit-input-${id}`)?.focus();
+}
+
+async function salvarEdicaoVisita(id, chave){
+  const input=document.getElementById(`visita-edit-input-${id}`);
+  const novoNome=input?.value?.trim();
+  if(!novoNome) return;
+  if(!visitasPorData[chave]) return;
+  const v=visitasPorData[chave].find(x=>x.id===id);
+  if(v){
+    // Atualizar também em presencas
+    const [data,fila]=chave.split('|');
+    const pkey=`${data}|${fila}`;
+    if(presencas[pkey]){
+      const idx=presencas[pkey].indexOf(v.nome);
+      if(idx>=0) presencas[pkey][idx]=novoNome;
+    }
+    v.nome=novoNome;
+    await saveVisitasPorData();
+    await saveData();
+  }
+  renderVisitasPendentes();
+}
+
+async function promoverVisita(id, chave, fila, nome){
+  const nomeEl=document.getElementById(`visita-nome-${id}`);
+  const nomeAtual=nomeEl?.querySelector('input')?.value?.trim()||nome;
+  if(!membrosExtras[fila]) membrosExtras[fila]=[];
+  if(!getMembrosAtuais(fila).includes(nomeAtual)){
+    membrosExtras[fila].push(nomeAtual);
+    await saveMembrosExtras();
+  }
+  await descartarVisita(id, chave);
+  const alertEl=document.getElementById('membro-alert');
+  if(alertEl){
+    alertEl.innerHTML=`<div class="alert alert-ok">✅ ${nomeAtual} promovido a membro oficial da ${MEMBROS[fila]?.label||fila}!</div>`;
+    setTimeout(()=>alertEl.innerHTML='',3000);
+  }
+  renderMembros();
+}
+
+async function descartarVisita(id, chave){
+  if(!visitasPorData[chave]) return;
+  visitasPorData[chave]=visitasPorData[chave].filter(v=>v.id!==id);
+  if(visitasPorData[chave].length===0) delete visitasPorData[chave];
+  await saveVisitasPorData();
+  renderVisitasPendentes();
+}
+
+// Visitas no painel do cooperador
+function renderVisitasPainel(data){
+  const filasComVisitas=Object.entries(visitasPorData)
+    .filter(([k])=>k.startsWith(data+'|'))
+    .map(([k,v])=>({fila:k.split('|')[1], visitas:v}))
+    .filter(x=>x.visitas.length>0);
+  if(!filasComVisitas.length) return '';
+  return `<div class="card" style="margin-top:.75rem">
+    <div class="card-title">👋 Visitas neste domingo</div>
+    ${filasComVisitas.map(({fila,visitas})=>`
+      <div style="margin-bottom:.5rem">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">${MEMBROS[fila]?.label||fila}</div>
+        ${visitas.map(v=>`<div style="font-size:12px;padding:3px 0;color:var(--text)">• ${v.nome}</div>`).join('')}
+      </div>`).join('')}
+  </div>`;
 }
 
 renderLoginFields();
