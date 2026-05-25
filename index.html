@@ -322,8 +322,9 @@ const AUX_USERS={
 };
 
 let currentRole='auxiliar',currentUser=null,presencas={},generoAux='M',rankFilt='todos';
-let membrosExtras = {};   // {filaKey: [nomes adicionados pelo cooperador]}
-let visitasPorData = {};  // {"data|fila": [{id, nome}]}
+let membrosExtras = {};    // {filaKey: [nomes adicionados pelo cooperador]}
+let visitasPorData = {};   // {"data|fila": [{id, nome}]}
+let membrosRemovidos = {}; // {filaKey: [nomes removidos pelo cooperador]}
 
 function getToday(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 
@@ -758,8 +759,11 @@ function getMembrosAtuais(filaKey){
   });
   // Adicionar membros extras cadastrados pelo Cooperador
   const extras = (membrosExtras[filaKey]||[]).filter(n=>!ficam.includes(n)&&!chegaram.includes(n));
+  // Remover membros que foram excluídos pelo Cooperador
+  const removidos = membrosRemovidos[filaKey] || [];
+  const todos = [...ficam, ...chegaram, ...extras].filter(m => !removidos.includes(m));
   // Juntar e ordenar alfabeticamente
-  return [...ficam, ...chegaram, ...extras].sort((a,b) => a.localeCompare(b,'pt-BR'));
+  return todos.sort((a,b) => a.localeCompare(b,'pt-BR'));
 }
 
 function pedirMudancaFila(filaKey, nome){
@@ -811,6 +815,7 @@ async function loadData(){
     else{const s=new Set(presencas[key]);nomes.forEach(n=>s.add(n));presencas[key]=[...s];}
   });
   try{const r=await window._fbGet('membros_extras');if(r) membrosExtras=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('membros_removidos');if(r) membrosRemovidos=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('visitas_por_data');if(r) visitasPorData=JSON.parse(r);}catch(e){}
   await loadTotaisOficiais();
   await loadMudancasFila();
@@ -822,6 +827,9 @@ async function saveData(){
 }
 async function saveMembrosExtras(){
   try{ await window._fbSet('membros_extras', JSON.stringify(membrosExtras)); }catch(e){}
+}
+async function saveMembrosRemovidos(){
+  try{ await window._fbSet('membros_removidos', JSON.stringify(membrosRemovidos)); }catch(e){}
 }
 async function saveVisitasPorData(){
   try{ await window._fbSet('visitas_por_data', JSON.stringify(visitasPorData)); }catch(e){}
