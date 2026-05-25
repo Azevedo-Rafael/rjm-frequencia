@@ -942,18 +942,23 @@ async function adicionarMembro(){
 }
 
 async function removerMembro(filaKey, nome){
-  if(!confirm(`Remover "${nome}" da ${MEMBROS[filaKey].label}?
+  if(!confirm(`Remover "${nome}" da ${MEMBROS[filaKey]?.label||filaKey}?\n\nEsta ação não afeta o histórico de presenças.`)) return;
 
-Esta ação não afeta o histórico de presenças.`)) return;
-  // Remover de membrosExtras se estiver lá
+  // 1. Remover de membrosExtras (membros adicionados pelo Cooperador)
   if(membrosExtras[filaKey]){
     membrosExtras[filaKey]=membrosExtras[filaKey].filter(n=>n!==nome);
     await saveMembrosExtras();
   }
-  // Se veio de mudança de fila, reverter
+  // 2. Reverter mudança de fila se aplicável
   if(mudancasFila[nome]){
     delete mudancasFila[nome];
     await saveMudancasFila();
+  }
+  // 3. Marcar como removido — funciona para qualquer membro, incluindo os originais do código
+  if(!membrosRemovidos[filaKey]) membrosRemovidos[filaKey]=[];
+  if(!membrosRemovidos[filaKey].includes(nome)){
+    membrosRemovidos[filaKey].push(nome);
+    await saveMembrosRemovidos();
   }
   renderMembros();
 }
