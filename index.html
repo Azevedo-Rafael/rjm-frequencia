@@ -308,6 +308,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     </div>
   </div>
   <div id="screen-aniversariantes" style="display:none">
+    <div id="aniv-voltar-btn"></div>
     <div id="aniv-hoje-section"></div>
     <div id="aniv-mes-section"></div>
   </div>
@@ -818,6 +819,15 @@ async function editarNomeMembro(filaKey, nomeAntigo){
 
 // ─── ANIVERSARIANTES ────────────────────────────────────────────────────────
 function renderAniversariantes(){
+  // Botão voltar — só para auxiliares
+  const voltarEl = document.getElementById('aniv-voltar-btn');
+  if(voltarEl){
+    if(currentUser?.role === 'auxiliar'){
+      voltarEl.innerHTML = `<button onclick="showScreen('auxiliar');renderFilasAux()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted);margin-bottom:.75rem">← Voltar à presença</button>`;
+    } else {
+      voltarEl.innerHTML = '';
+    }
+  }
   const hoje = new Date();
   const mesAtual = hoje.getMonth()+1;
   const todosOsMembros = [];
