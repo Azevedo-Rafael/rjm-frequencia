@@ -163,6 +163,32 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
 .btn-visita-edit:hover{background:var(--bg)}
 .btn-visita-promote{padding:3px 8px;font-size:10px;font-weight:600;border:1px solid var(--teal);border-radius:99px;background:var(--teal-l);color:var(--teal-d);cursor:pointer}
 .btn-visita-discard{padding:3px 8px;font-size:10px;border:1px solid var(--red-l);border-radius:99px;background:transparent;color:var(--red);cursor:pointer}
+.aniv-card{background:linear-gradient(135deg,var(--teal-l),#fff);border:1px solid var(--teal);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.aniv-hoje-card{background:linear-gradient(135deg,#FFF8E1,#FFFDE7);border:2px solid var(--amber);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.aniv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:13px}
+.aniv-row:last-child{border:none}
+.aniv-nome{flex:1;font-weight:500}
+.aniv-fila{font-size:11px;color:var(--muted)}
+.aniv-idade{font-size:12px;font-weight:700;color:var(--teal-d);min-width:45px;text-align:right}
+.aniv-hoje-badge{font-size:10px;padding:2px 8px;border-radius:99px;background:var(--amber);color:#fff;font-weight:700;margin-left:4px}
+.highlight-mudar{background:linear-gradient(90deg,var(--amber-l),transparent);border-radius:6px}
+.btn-edit-nome{padding:2px 7px;font-size:10px;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--hint);cursor:pointer;margin-left:4px;flex-shrink:0}
+.btn-edit-nome:hover{background:var(--bg);color:var(--text)}
+.nasc-btn{padding:2px 7px;font-size:10px;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--hint);cursor:pointer;flex-shrink:0;white-space:nowrap}
+.nasc-btn.ok{border-color:var(--teal);color:var(--teal-d);background:var(--teal-l)}
+.nasc-btn.pend{border-color:var(--amber);color:var(--amber);background:var(--amber-l)}
+.batismo-cb{width:14px;height:14px;accent-color:var(--teal);cursor:pointer}
+.batismo-label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:3px;flex-shrink:0}
+.dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:.75rem}
+.dash-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.875rem}
+.dash-title{font-size:11px;color:var(--muted);margin-bottom:.5rem}
+.dash-val{font-size:20px;font-weight:700;color:var(--text)}
+.dash-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.batismo-bar{height:8px;border-radius:99px;background:var(--bg);overflow:hidden;margin:.5rem 0;border:1px solid var(--border)}
+.batismo-fill{height:100%;background:var(--teal);border-radius:99px}
+.batismo-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+.batismo-row:last-child{border:none}
+@media(max-width:500px){.dash-grid{grid-template-columns:1fr}}
 .oficial-box{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;background:var(--teal-l);border:1px solid var(--teal);border-radius:10px;margin-bottom:.75rem}
 .oficial-box label{font-size:12px;font-weight:600;color:var(--teal-d);white-space:nowrap}
 .oficial-input{width:72px;padding:6px 10px;border:1px solid var(--teal);border-radius:7px;font-size:15px;font-weight:700;color:var(--teal-d);background:#fff;text-align:center;outline:none}
@@ -218,12 +244,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     <button class="nav-btn" onclick="goTab('historico',this)">📅 Histórico</button>
     <button class="nav-btn" onclick="goTab('ranking',this)">🏆 Ranking</button>
     <button class="nav-btn" onclick="goTab('membros',this)">👥 Membros</button>
+    <button class="nav-btn" onclick="goTab('batismo',this)">⭐ Batismo</button>
   </div>
   <div id="screen-auxiliar" style="display:none">
     <div class="card"><div class="card-title">📅 Data da reunião</div><select class="date-sel" id="aux-data" onchange="renderFilasAux()"></select></div>
-    <div class="filter-row">
-      <button class="filter-btn on" id="aux-f-m" onclick="setGenero('M')">♂ Meninos</button>
-      <button class="filter-btn" id="aux-f-f" onclick="setGenero('F')">♀ Meninas</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;gap:6px">
+        <button class="filter-btn on" id="aux-f-m" onclick="setGenero('M')">♂ Meninos</button>
+        <button class="filter-btn" id="aux-f-f" onclick="setGenero('F')">♀ Meninas</button>
+      </div>
+      <button class="filter-btn" onclick="showScreen('aniversariantes');renderAniversariantes()" style="border-color:var(--amber);color:var(--amber)">🎂 Aniversariantes</button>
     </div>
     <div id="aux-filas"></div>
     <div class="action-bar"><span class="sel-count" id="aux-count"></span><button class="btn-save" onclick="salvarPresenca()">💾 Salvar presença</button></div>
@@ -276,6 +306,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
       <div id="visitas-pendentes-list"></div>
     </div>
   </div>
+  <div id="screen-aniversariantes" style="display:none">
+    <div id="aniv-hoje-section"></div>
+    <div id="aniv-mes-section"></div>
+  </div>
+  <div id="screen-batismo" style="display:none">
+    <div class="dash-grid" id="batismo-dash"></div>
+    <div class="card">
+      <div class="card-title">⭐ Detalhamento por fila</div>
+      <div id="batismo-detalhe"></div>
+    </div>
+    <div class="card" style="margin-top:.75rem">
+      <div class="card-title" style="color:var(--amber)">⚠️ Não batizados</div>
+      <div id="batismo-naobatizados"></div>
+    </div>
+  </div>
   <div id="screen-ranking" style="display:none">
     <div class="filter-row" id="rank-filters"></div>
     <div class="card"><div class="card-title">🏆 Ranking de presenças — 2026</div><div id="rank-list"></div></div>
@@ -324,7 +369,9 @@ const AUX_USERS={
 let currentRole='auxiliar',currentUser=null,presencas={},generoAux='M',rankFilt='todos';
 let membrosExtras = {};    // {filaKey: [nomes adicionados pelo cooperador]}
 let visitasPorData = {};   // {"data|fila": [{id, nome}]}
-let membrosRemovidos = {}; // {filaKey: [nomes removidos pelo cooperador]}
+let membrosRemovidos = {}; // {filaKey: [nomes removidos]}
+let datasNasc = {};        // {nome: "DD/MM/YYYY"}
+let batismos = {};         // {nome: true/false}
 
 function getToday(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 
@@ -440,6 +487,9 @@ function renderFilasAux(){
     // Botão de subir fila: só para o auxiliar dono da fila, e só se houver próxima fila
     const podeMovar = (fu===key) && !!PROX_FILA[key];
     const proxLabel = PROX_FILA[key] ? LABEL_FILA_CURTA[PROX_FILA[key]] : '';
+    // Batismo visível nas filas 3 e 4
+    const mostrarBatismo = (key==='3M'||key==='4M'||key==='3F'||key==='4F');
+    const podeCadNasc = (fu===key||fu==='all');
     // Visitas já registradas nesta data/fila
     const vkey=`${data}|${key}`;
     const visitasNestaFila=(visitasPorData[vkey]||[]);
@@ -456,7 +506,17 @@ function renderFilasAux(){
           const movBtn=podeMovar
             ? `<button class="member-move-btn" onclick="event.preventDefault();event.stopPropagation();pedirMudancaFila('${key}','${mEsc}')" title="Mover para ${proxLabel}">↑ ${proxLabel}</button>`
             : '';
-          return `<label class="member-row"><input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)"><span class="member-name">${m}</span>${movBtn}</label>`;
+          const nasc=datasNasc[m]||'';
+          const idade=nasc?calcIdade(nasc):null;
+          const apto=aptoMudarFila(m,key);
+          const anivHj=isAnivHoje(nasc);
+          const nascBtnTxt=nasc?(anivHj?`🎂 ${nasc}`:`📅 ${nasc}`):'📅 Nasc?';
+          const nascBtnCls=nasc?(anivHj?'nasc-btn ok':'nasc-btn ok'):'nasc-btn pend';
+          const idadeStr=idade!==null?` (${idade}a)`:'';
+          const highlightCls=apto&&PROX_FILA[key]?'highlight-mudar':'';
+          const nascBtn=podeCadNasc?`<button class="${nascBtnCls}" onclick="event.preventDefault();event.stopPropagation();editarNasc('${mEsc}')">${nascBtnTxt}</button>`:'';
+          const batismoChk=mostrarBatismo?`<label class="batismo-label" onclick="event.stopPropagation()"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mEsc}',this.checked)">⭐</label>`:'';
+          return `<label class="member-row ${highlightCls}"><input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)"><span class="member-name">${m}${idadeStr}${anivHj?' 🎂':''}</span>${apto&&PROX_FILA[key]?'<span style="font-size:10px;color:var(--amber);margin-left:4px" title="Apto a subir de fila">⬆️</span>':''}${batismoChk}${nascBtn}${movBtn}</label>`;
         }).join('')}
         <div class="visita-section" id="visitas-section-${key}">
           <div class="visita-section-title">👋 Visitas / Nome extra</div>
@@ -568,7 +628,10 @@ function renderPainel(){
     <div class="stat"><div class="stat-val">${oficial??appHoje}</div><div class="stat-lbl">Presentes nesta data</div><div class="stat-sub">${oficial?'total oficial':'lançado no app'}</div></div>
     <div class="stat"><div class="stat-val">${filasOk}/8</div><div class="stat-lbl">Filas com registro</div></div>
     <div class="stat"><div class="stat-val">${media26||'—'}</div><div class="stat-lbl">Média 2026</div><div class="stat-sub">${vals26.length} reuniões</div></div>`;
-  document.getElementById('painel-filas').innerHTML=html+renderVisitasPainel(data);
+  // Card aniversariantes do dia no painel
+  const anivHjPainel=Object.keys(MEMBROS).flatMap(fk=>getMembrosAtuais(fk).filter(m=>isAnivHoje(datasNasc[m]||'')).map(m=>({m,fk})));
+  const anivCardHtml=anivHjPainel.length>0?`<div class="card" style="border:2px solid var(--amber);margin-bottom:.75rem"><div class="card-title" style="color:var(--amber)">🎂 Aniversariantes de Hoje!</div>${anivHjPainel.map(({m,fk})=>`<div class="aniv-row"><span class="aniv-nome">${m}</span><span class="aniv-fila">${MEMBROS[fk]?.label?.split('—')[1]?.trim()||fk} · ${calcIdade(datasNasc[m])} anos</span></div>`).join('')}</div>`:'';
+  document.getElementById('painel-filas').innerHTML=anivCardHtml+html+renderVisitasPainel(data);
 }
 
 function renderGaps(){
@@ -655,6 +718,170 @@ function setRankFilt(f){
   renderRanking();
 }
 
+// ─── DATA NASC / BATISMO / EDIÇÃO DE NOME ────────────────────────────────────
+async function editarNasc(nome){
+  const atual = datasNasc[nome]||'';
+  const novo = prompt(`Data de nascimento de ${nome}:\n(formato DD/MM/AAAA)`, atual);
+  if(novo===null) return;
+  const limpo = novo.trim();
+  if(limpo && !/^\d{2}\/\d{2}\/\d{4}$/.test(limpo)){
+    alert('Formato inválido. Use DD/MM/AAAA');return;
+  }
+  if(limpo) datasNasc[nome]=limpo;
+  else delete datasNasc[nome];
+  await saveDatasNasc();
+  renderFilasAux();
+}
+
+async function toggleBatismo(nome, val){
+  batismos[nome]=val;
+  await saveBatismos();
+}
+
+async function editarNomeMembro(filaKey, nomeAntigo){
+  const novo = prompt(`Editar nome:\n(atual: ${nomeAntigo})`, nomeAntigo);
+  if(!novo||!novo.trim()||novo.trim()===nomeAntigo) return;
+  const novoNome = novo.trim();
+
+  // 1. membrosExtras
+  if(membrosExtras[filaKey]){
+    membrosExtras[filaKey]=membrosExtras[filaKey].map(n=>n===nomeAntigo?novoNome:n);
+    await saveMembrosExtras();
+  }
+  // 2. Renomear em presencas (histórico)
+  Object.keys(presencas).forEach(key=>{
+    const idx=presencas[key].indexOf(nomeAntigo);
+    if(idx>=0) presencas[key][idx]=novoNome;
+  });
+  await saveData();
+  // 3. Renomear em mudancasFila
+  if(mudancasFila[nomeAntigo]){
+    mudancasFila[novoNome]=mudancasFila[nomeAntigo];
+    delete mudancasFila[nomeAntigo];
+    await saveMudancasFila();
+  }
+  // 4. Renomear em datasNasc
+  if(datasNasc[nomeAntigo]){
+    datasNasc[novoNome]=datasNasc[nomeAntigo];
+    delete datasNasc[nomeAntigo];
+    await saveDatasNasc();
+  }
+  // 5. Renomear em batismos
+  if(batismos[nomeAntigo]!==undefined){
+    batismos[novoNome]=batismos[nomeAntigo];
+    delete batismos[nomeAntigo];
+    await saveBatismos();
+  }
+  // 6. Renomear em membrosRemovidos (caso exista)
+  if(membrosRemovidos[filaKey]){
+    membrosRemovidos[filaKey]=membrosRemovidos[filaKey].map(n=>n===nomeAntigo?novoNome:n);
+    await saveMembrosRemovidos();
+  }
+  // 7. Se membro original do código, adicionar versão nova nos extras e remover a antiga
+  const originais=MEMBROS[filaKey]?.membros||[];
+  if(originais.includes(nomeAntigo)){
+    if(!membrosExtras[filaKey]) membrosExtras[filaKey]=[];
+    if(!membrosExtras[filaKey].includes(novoNome)) membrosExtras[filaKey].push(novoNome);
+    if(!membrosRemovidos[filaKey]) membrosRemovidos[filaKey]=[];
+    if(!membrosRemovidos[filaKey].includes(nomeAntigo)) membrosRemovidos[filaKey].push(nomeAntigo);
+    await saveMembrosExtras();
+    await saveMembrosRemovidos();
+  }
+  renderMembros();
+  renderFilasAux();
+}
+
+// ─── ANIVERSARIANTES ────────────────────────────────────────────────────────
+function renderAniversariantes(){
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth()+1;
+  const todosOsMembros = [];
+  Object.keys(MEMBROS).forEach(fk=>{
+    getMembrosAtuais(fk).forEach(m=>{
+      const nasc=datasNasc[m];
+      if(nasc) todosOsMembros.push({nome:m,fila:fk,nasc});
+    });
+  });
+
+  // Aniversariantes do DIA
+  const hoje_list=todosOsMembros.filter(x=>isAnivHoje(x.nasc));
+  const hojeHtml=hoje_list.length>0
+    ?`<div class="aniv-hoje-card">
+      <div class="card-title" style="color:var(--amber)">🎂 Aniversariantes de Hoje!</div>
+      ${hoje_list.map(x=>`<div class="aniv-row">
+        <span class="aniv-nome">${x.nome} <span class="aniv-hoje-badge">HOJE</span></span>
+        <span class="aniv-fila">${MEMBROS[x.fila]?.label?.split('—')[1]?.trim()||x.fila}</span>
+        <span class="aniv-idade">${calcIdade(x.nasc)} anos</span>
+      </div>`).join('')}
+    </div>`
+    :`<div class="aniv-hoje-card" style="opacity:.6"><div class="card-title" style="color:var(--amber)">🎂 Aniversariantes de Hoje</div><div class="empty" style="padding:.5rem">Ninguém faz aniversário hoje 🎉</div></div>`;
+  document.getElementById('aniv-hoje-section').innerHTML=hojeHtml;
+
+  // Aniversariantes do MÊS
+  const mes_list=todosOsMembros.filter(x=>isAnivMes(x.nasc,mesAtual)&&!isAnivHoje(x.nasc));
+  mes_list.sort((a,b)=>{
+    const [da]=a.nasc.split('/').map(Number);
+    const [db]=b.nasc.split('/').map(Number);
+    return da-db;
+  });
+  const mesHtml=`<div class="aniv-card">
+    <div class="card-title">📅 Aniversariantes de ${MESES_PT[mesAtual-1]}</div>
+    ${mes_list.length>0
+      ?mes_list.map(x=>`<div class="aniv-row">
+          <span class="aniv-nome">${x.nome}</span>
+          <span class="aniv-fila">${MEMBROS[x.fila]?.label?.split('—')[1]?.trim()||x.fila} · dia ${x.nasc.split('/')[0]}</span>
+          <span class="aniv-idade">${calcIdade(x.nasc)} anos</span>
+        </div>`).join('')
+      :'<div class="empty" style="padding:.5rem">Nenhum aniversariante no restante do mês.</div>'}
+  </div>`;
+  document.getElementById('aniv-mes-section').innerHTML=mesHtml;
+}
+
+// ─── BATISMO DASHBOARD ──────────────────────────────────────────────────────
+function renderBatismo(){
+  const filasBat=['3M','4M','3F','4F'];
+  let totalBat=0,totalNao=0;
+  let mBat=0,mNao=0,fBat=0,fNao=0;
+  const porFila={};
+
+  filasBat.forEach(fk=>{
+    const membros=getMembrosAtuais(fk);
+    let b=0,n=0;
+    membros.forEach(m=>{ batismos[m]?b++:n++; });
+    porFila[fk]={b,n,total:membros.length};
+    totalBat+=b; totalNao+=n;
+    if(fk.endsWith('M')){mBat+=b;mNao+=n;}
+    else{fBat+=b;fNao+=n;}
+  });
+
+  const total=totalBat+totalNao;
+  const pct=n=>total>0?Math.round(n/total*100):0;
+  const pctM=n=>(mBat+mNao)>0?Math.round(n/(mBat+mNao)*100):0;
+  const pctF=n=>(fBat+fNao)>0?Math.round(n/(fBat+fNao)*100):0;
+
+  document.getElementById('batismo-dash').innerHTML=`
+    <div class="dash-card"><div class="dash-title">Total batizados</div><div class="dash-val">${totalBat}</div><div class="dash-sub">${pct(totalBat)}% de ${total} membros (3ª e 4ª filas)</div><div class="batismo-bar"><div class="batismo-fill" style="width:${pct(totalBat)}%"></div></div></div>
+    <div class="dash-card"><div class="dash-title">Não batizados</div><div class="dash-val" style="color:var(--amber)">${totalNao}</div><div class="dash-sub">${pct(totalNao)}% pendentes</div><div class="batismo-bar"><div class="batismo-fill" style="width:${pct(totalNao)}%;background:var(--amber)"></div></div></div>
+    <div class="dash-card"><div class="dash-title">Moços batizados</div><div class="dash-val">${mBat}</div><div class="dash-sub">${pctM(mBat)}% dos moços (3ª+4ª)</div><div class="batismo-bar"><div class="batismo-fill" style="width:${pctM(mBat)}%"></div></div></div>
+    <div class="dash-card"><div class="dash-title">Moças batizadas</div><div class="dash-val">${fBat}</div><div class="dash-sub">${pctF(fBat)}% das moças (3ª+4ª)</div><div class="batismo-bar"><div class="batismo-fill" style="width:${pctF(fBat)}%"></div></div></div>`;
+
+  let detalhe='';
+  filasBat.forEach(fk=>{
+    const {b,n,total:t}=porFila[fk];
+    const p=t>0?Math.round(b/t*100):0;
+    detalhe+=`<div class="batismo-row"><span>${MEMBROS[fk].label}</span><span>${b}/${t} batizados (${p}%)</span><div class="batismo-bar" style="width:80px;display:inline-block;margin:0 0 0 8px"><div class="batismo-fill" style="width:${p}%"></div></div></div>`;
+  });
+  document.getElementById('batismo-detalhe').innerHTML=detalhe;
+
+  // Não batizados — lista nominal
+  let naoBat='';
+  filasBat.forEach(fk=>{
+    const nomes=getMembrosAtuais(fk).filter(m=>!batismos[m]);
+    if(nomes.length) naoBat+=`<div style="margin-bottom:.5rem"><div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:3px">${MEMBROS[fk].label}</div>${nomes.map(n=>`<div style="font-size:12px;padding:3px 0">• ${n}${datasNasc[n]?' ('+calcIdade(datasNasc[n])+'a)':''}</div>`).join('')}</div>`;
+  });
+  document.getElementById('batismo-naobatizados').innerHTML=naoBat||'<div class="empty">Todos batizados! 🎉</div>';
+}
+
 function getFilaAtual(nome){
   // Retorna a fila atual do membro (considera múltiplas mudanças)
   const mov=mudancasFila[nome];
@@ -709,7 +936,7 @@ function renderRanking(){
 }
 
 function showScreen(name){
-  ['auxiliar','painel','gaps','historico','ranking','membros'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
+  ['auxiliar','painel','gaps','historico','ranking','membros','batismo','aniversariantes'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
 }
 
 function goTab(tab,btn){
@@ -721,11 +948,48 @@ function goTab(tab,btn){
   else if(tab==='historico') renderHistorico();
   else if(tab==='ranking'){buildRankFilters();renderRanking();}
   else if(tab==='membros') renderMembros();
+  else if(tab==='batismo') renderBatismo();
+  else if(tab==='aniversariantes') renderAniversariantes();
 }
 
 // ─── MUDANÇA DE FILA ─────────────────────────────────────────────────────────
 // Mapa de próxima fila: 1M->2M, 2M->3M, 3M->4M, 1F->2F, 2F->3F, 3F->4F
 const PROX_FILA = {'1M':'2M','2M':'3M','3M':'4M','1F':'2F','2F':'3F','3F':'4F'};
+const IDADE_MIN_FILA = {'1M':0,'2M':7,'3M':11,'4M':15,'1F':0,'2F':7,'3F':11,'4F':15};
+const IDADE_MAX_FILA = {'1M':6,'2M':10,'3M':14,'4M':99,'1F':6,'2F':10,'3F':14,'4F':99};
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function calcIdade(nascStr){
+  if(!nascStr) return null;
+  const [d,m,a] = nascStr.split('/').map(Number);
+  if(!d||!m||!a) return null;
+  const hoje = new Date();
+  let idade = hoje.getFullYear()-a;
+  if(hoje.getMonth()+1 < m || (hoje.getMonth()+1===m && hoje.getDate()<d)) idade--;
+  return idade;
+}
+
+function isAnivHoje(nascStr){
+  if(!nascStr) return false;
+  const [d,m] = nascStr.split('/').map(Number);
+  const hoje = new Date();
+  return d===hoje.getDate() && m===hoje.getMonth()+1;
+}
+
+function isAnivMes(nascStr, mes){
+  if(!nascStr) return false;
+  const [,m] = nascStr.split('/').map(Number);
+  return m===mes;
+}
+
+function aptoMudarFila(nome, filaKey){
+  const nasc = datasNasc[nome];
+  if(!nasc || !PROX_FILA[filaKey]) return false;
+  const idade = calcIdade(nasc);
+  if(idade===null) return false;
+  const idadeMinProx = IDADE_MIN_FILA[PROX_FILA[filaKey]];
+  return idade >= idadeMinProx;
+}
 const LABEL_FILA_CURTA = {'1M':'1ª Meninos','2M':'2ª Meninos','3M':'3ª Moços','4M':'4ª Moços','1F':'1ª Meninas','2F':'2ª Meninas','3F':'3ª Moças','4F':'4ª Moças'};
 
 // Mudanças de fila persistidas: {nome_original: {de: filaKey, para: filaKey}}
@@ -817,6 +1081,8 @@ async function loadData(){
   try{const r=await window._fbGet('membros_extras');if(r) membrosExtras=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('membros_removidos');if(r) membrosRemovidos=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('visitas_por_data');if(r) visitasPorData=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('datas_nasc');if(r) datasNasc=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('batismos');if(r) batismos=JSON.parse(r);}catch(e){}
   await loadTotaisOficiais();
   await loadMudancasFila();
   document.getElementById('fb-loading')?.remove();
@@ -833,6 +1099,12 @@ async function saveMembrosRemovidos(){
 }
 async function saveVisitasPorData(){
   try{ await window._fbSet('visitas_por_data', JSON.stringify(visitasPorData)); }catch(e){}
+}
+async function saveDatasNasc(){
+  try{ await window._fbSet('datas_nasc', JSON.stringify(datasNasc)); }catch(e){}
+}
+async function saveBatismos(){
+  try{ await window._fbSet('batismos', JSON.stringify(batismos)); }catch(e){}
 }
 
 // Totais oficiais editáveis pelo Cooperador (sobrepõem os hardcoded)
@@ -909,11 +1181,20 @@ function renderMembros(){
         <span class="chevron" id="mchev-${key}">▼</span>
       </div>
       <div class="member-list" id="mf-${key}">
-        ${membros.map(m=>`
-          <div class="membro-manage-row">
-            <span class="membro-manage-name">${m}</span>
-            <button class="btn-remove-membro" onclick="removerMembro('${key}','${m.replace(/'/g,"\'").replace(/"/g,'&quot;')}')">✕ Remover</button>
-          </div>`).join('')}
+        ${membros.map(m=>{
+          const mE=m.replace(/'/g,"\'").replace(/"/g,'&quot;');
+          const nasc=datasNasc[m]||'';
+          const idade=nasc?calcIdade(nasc):null;
+          const anivHj=isAnivHoje(nasc);
+          const mostrarBat=(key==='3M'||key==='4M'||key==='3F'||key==='4F');
+          return `<div class="membro-manage-row ${anivHj?'highlight-mudar':''}">
+            <span class="membro-manage-name">${m}${idade!==null?' ('+idade+'a)':''}${anivHj?' 🎂':''}</span>
+            ${nasc?`<span style="font-size:10px;color:var(--muted)">${nasc}</span>`:'<span style="font-size:10px;color:var(--amber)">⚠ sem nasc.</span>'}
+            ${mostrarBat?`<label class="batismo-label"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mE}',this.checked)">⭐ Bat.</label>`:''}
+            <button class="btn-edit-nome" onclick="editarNomeMembro('${key}','${mE}')">✏️</button>
+            <button class="btn-remove-membro" onclick="removerMembro('${key}','${mE}')">✕</button>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   });
