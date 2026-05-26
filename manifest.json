@@ -1,0 +1,25 @@
+{
+  "name": "RJM — Jd. Valparaíba",
+  "short_name": "RJM",
+  "description": "Controle de frequência da Reunião de Jovens e Menores",
+  "start_url": "/rjm-frequencia/",
+  "scope": "/rjm-frequencia/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F5F2",
+  "theme_color": "#1D9E75",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
