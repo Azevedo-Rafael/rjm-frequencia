@@ -245,6 +245,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     <button class="nav-btn" onclick="goTab('ranking',this)">🏆 Ranking</button>
     <button class="nav-btn" onclick="goTab('membros',this)">👥 Membros</button>
     <button class="nav-btn" onclick="goTab('batismo',this)">⭐ Batismo</button>
+    <button class="nav-btn" onclick="goTab('aniversariantes',this)">🎂 Aniversários</button>
   </div>
   <div id="screen-auxiliar" style="display:none">
     <div class="card"><div class="card-title">📅 Data da reunião</div><select class="date-sel" id="aux-data" onchange="renderFilasAux()"></select></div>
@@ -501,6 +502,7 @@ function renderFilasAux(){
       </div>
       <div class="prog-wrap"><div class="prog-bar" id="prog-${key}" style="width:${pct}%"></div></div>
       <div class="member-list" id="fl-${key}">
+        ${mostrarBatismo?`<div style="font-size:10px;color:var(--hint);padding:4px 8px 2px;font-style:italic">⭐ = Batizado(a)</div>`:''}
         ${membrosAtuais.map(m=>{
           const mEsc=m.replace(/'/g,"\\'").replace(/"/g,'&quot;');
           const movBtn=podeMovar
@@ -604,6 +606,25 @@ async function salvarPresenca(){
 function renderPainel(){
   const data=document.getElementById('painel-data').value;
   renderOficialBox(data);
+  // Card aniversariantes do mês
+  const mesAtual=new Date().getMonth()+1;
+  const anivMesPainel=Object.keys(MEMBROS).flatMap(fk=>
+    getMembrosAtuais(fk)
+      .filter(m=>isAnivMes(datasNasc[m]||'',mesAtual))
+      .map(m=>({m,fk,nasc:datasNasc[m]}))
+  ).sort((a,b)=>Number(a.nasc?.split('/')[0]||99)-Number(b.nasc?.split('/')[0]||99));
+  const anivMesCardHtml=anivMesPainel.length>0?`
+    <div class="card" style="border:1px solid var(--teal);margin-bottom:.75rem">
+      <div class="card-title">🎂 Aniversariantes de ${MESES_PT[mesAtual-1]} (${anivMesPainel.length})</div>
+      ${anivMesPainel.map(({m,fk,nasc})=>{
+        const hj=isAnivHoje(nasc);
+        return `<div class="aniv-row">
+          <span class="aniv-nome">${m}${hj?' <span class="aniv-hoje-badge">HOJE</span>':''}</span>
+          <span class="aniv-fila">${MEMBROS[fk]?.label?.split('—')[1]?.trim()||fk} · dia ${nasc?.split('/')[0]||'?'}</span>
+          <span class="aniv-idade">${calcIdade(nasc)!==null?calcIdade(nasc)+'a':''}</span>
+        </div>`;
+      }).join('')}
+    </div>`:'';
   const AK=Object.keys(MEMBROS);
   let total=0,filasOk=0,html='';
   AK.forEach(key=>{
@@ -631,7 +652,7 @@ function renderPainel(){
   // Card aniversariantes do dia no painel
   const anivHjPainel=Object.keys(MEMBROS).flatMap(fk=>getMembrosAtuais(fk).filter(m=>isAnivHoje(datasNasc[m]||'')).map(m=>({m,fk})));
   const anivCardHtml=anivHjPainel.length>0?`<div class="card" style="border:2px solid var(--amber);margin-bottom:.75rem"><div class="card-title" style="color:var(--amber)">🎂 Aniversariantes de Hoje!</div>${anivHjPainel.map(({m,fk})=>`<div class="aniv-row"><span class="aniv-nome">${m}</span><span class="aniv-fila">${MEMBROS[fk]?.label?.split('—')[1]?.trim()||fk} · ${calcIdade(datasNasc[m])} anos</span></div>`).join('')}</div>`:'';
-  document.getElementById('painel-filas').innerHTML=anivCardHtml+html+renderVisitasPainel(data);
+  document.getElementById('painel-filas').innerHTML=anivMesCardHtml+anivCardHtml+html+renderVisitasPainel(data);
 }
 
 function renderGaps(){
