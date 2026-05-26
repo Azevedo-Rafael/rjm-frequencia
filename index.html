@@ -823,7 +823,7 @@ function renderAniversariantes(){
   const voltarEl = document.getElementById('aniv-voltar-btn');
   if(voltarEl){
     if(currentUser?.role === 'auxiliar'){
-      voltarEl.innerHTML = `<button onclick="showScreen('auxiliar');renderFilasAux()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted);margin-bottom:.75rem">← Voltar à presença</button>`;
+      voltarEl.innerHTML = `<button onclick="showScreen('auxiliar');renderFilasAux()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted);margin-bottom:.75rem">← Voltar </button>`;
     } else {
       voltarEl.innerHTML = '';
     }
