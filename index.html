@@ -518,7 +518,11 @@ function renderFilasAux(){
           const highlightCls=apto&&PROX_FILA[key]?'highlight-mudar':'';
           const nascBtn=podeCadNasc?`<button class="${nascBtnCls}" onclick="event.preventDefault();event.stopPropagation();editarNasc('${mEsc}')">${nascBtnTxt}</button>`:'';
           const batismoChk=mostrarBatismo?`<label class="batismo-label" onclick="event.stopPropagation()"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mEsc}',this.checked)">⭐</label>`:'';
-          return `<label class="member-row ${highlightCls}"><input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)"><span class="member-name">${m}${idadeStr}${anivHj?' 🎂':''}</span>${apto&&PROX_FILA[key]?'<span style="font-size:10px;color:var(--amber);margin-left:4px" title="Apto a subir de fila">⬆️</span>':''}${batismoChk}${nascBtn}${movBtn}</label>`;
+          return `<div class="member-row ${highlightCls}" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" class="member-cb" ${pres.includes(m)?'checked':''} onchange="toggleM('${key}','${mEsc}',this.checked)" onclick="event.stopPropagation()">
+            <span class="member-name" style="flex:1;min-width:0">${m}${idadeStr}${anivHj?' 🎂':''}${apto&&PROX_FILA[key]?'<span style="font-size:10px;color:var(--amber);margin-left:4px" title="Apto a subir de fila">⬆️</span>':''}</span>
+            <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto" onclick="event.stopPropagation()">${batismoChk}${nascBtn}${movBtn}</span>
+          </div>`;
         }).join('')}
         <div class="visita-section" id="visitas-section-${key}">
           <div class="visita-section-title">👋 Visitas / Nome extra</div>
