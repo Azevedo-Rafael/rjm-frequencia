@@ -169,6 +169,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
 .btn-visita-edit:hover{background:var(--bg)}
 .btn-visita-promote{padding:3px 8px;font-size:10px;font-weight:600;border:1px solid var(--teal);border-radius:99px;background:var(--teal-l);color:var(--teal-d);cursor:pointer}
 .btn-visita-discard{padding:3px 8px;font-size:10px;border:1px solid var(--red-l);border-radius:99px;background:transparent;color:var(--red);cursor:pointer}
+.membros-tab-row{display:flex;gap:4px;margin-bottom:.75rem;background:var(--bg);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.membros-tab{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:7px;color:var(--muted);border:none;background:transparent;transition:all .15s}
+.membros-tab.on{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.inativo-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12px;background:var(--bg);margin-bottom:4px}
+.inativo-nome{flex:1;color:var(--muted);font-style:italic}
+.inativo-info{font-size:10px;color:var(--hint)}
+.btn-reativar{padding:4px 10px;font-size:11px;font-weight:600;border:1px solid var(--teal);border-radius:99px;background:var(--teal-l);color:var(--teal-d);cursor:pointer;white-space:nowrap}
+.btn-reativar:hover{background:var(--teal);color:#fff}
+.btn-nasc-coop{padding:3px 9px;font-size:10px;border-radius:99px;border:1px solid var(--border);background:transparent;cursor:pointer;white-space:nowrap}
+.btn-nasc-coop.ok{border-color:var(--teal);color:var(--teal-d);background:var(--teal-l)}
+.btn-nasc-coop.pend{border-color:var(--amber);color:var(--amber);background:var(--amber-l)}
 .aniv-card{background:linear-gradient(135deg,var(--teal-l),#fff);border:1px solid var(--teal);border-radius:12px;padding:1rem;margin-bottom:.75rem}
 .aniv-hoje-card{background:linear-gradient(135deg,#FFF8E1,#FFFDE7);border:2px solid var(--amber);border-radius:12px;padding:1rem;margin-bottom:.75rem}
 .aniv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:13px}
@@ -294,23 +305,39 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     </div>
   </div>
   <div id="screen-membros" style="display:none">
-    <div class="card">
-      <div class="card-title">👥 Lista Mestra de Membros</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Adicione ou remova membros da lista oficial. As alterações refletem imediatamente para todos os auxiliares.</div>
-      <div class="add-membro-box">
-        <input class="add-membro-input" id="novo-membro-nome" placeholder="Nome completo (ex: João Pedro - Ir. Ricardo)" />
-        <select class="add-membro-sel" id="novo-membro-fila">
-          <option value="">Selecione a fila...</option>
-        </select>
-        <button class="btn-add-membro" onclick="adicionarMembro()">+ Adicionar</button>
-      </div>
-      <div id="membro-alert" style="margin-top:.5rem"></div>
+    <div class="membros-tab-row">
+      <button class="membros-tab on" id="mtab-ativos" onclick="setMembrosTab('ativos')">✅ Ativos</button>
+      <button class="membros-tab" id="mtab-inativos" onclick="setMembrosTab('inativos')">📦 Inativos</button>
+      <button class="membros-tab" id="mtab-visitas" onclick="setMembrosTab('visitas')">👁️ Visitas</button>
     </div>
-    <div id="membros-master-list"></div>
-    <div class="card" style="margin-top:.75rem">
-      <div class="card-title">👁️ Visitas pendentes de avaliação</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Visitas registradas pelos auxiliares. Edite o nome e promova para membro oficial, ou descarte.</div>
-      <div id="visitas-pendentes-list"></div>
+    <div id="membros-tab-ativos">
+      <div class="card">
+        <div class="card-title">👥 Lista Mestra de Membros</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Adicione ou remova membros. O ✕ move o membro para Inativos preservando todo o histórico.</div>
+        <div class="add-membro-box">
+          <input class="add-membro-input" id="novo-membro-nome" placeholder="Nome completo (ex: João Pedro - Ir. Ricardo)" />
+          <select class="add-membro-sel" id="novo-membro-fila">
+            <option value="">Selecione a fila...</option>
+          </select>
+          <button class="btn-add-membro" onclick="adicionarMembro()">+ Adicionar</button>
+        </div>
+        <div id="membro-alert" style="margin-top:.5rem"></div>
+      </div>
+      <div id="membros-master-list"></div>
+    </div>
+    <div id="membros-tab-inativos" style="display:none">
+      <div class="card">
+        <div class="card-title">📦 Membros Inativos</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Histórico preservado. Clique em ↩ Reativar para devolver à fila correta pela idade atual.</div>
+        <div id="membros-inativos-list"></div>
+      </div>
+    </div>
+    <div id="membros-tab-visitas" style="display:none">
+      <div class="card">
+        <div class="card-title">👁️ Visitas pendentes de avaliação</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Visitas registradas pelos auxiliares. Edite o nome e promova para membro oficial, ou descarte.</div>
+        <div id="visitas-pendentes-list"></div>
+      </div>
     </div>
   </div>
   <div id="screen-aniversariantes" style="display:none">
@@ -377,7 +404,8 @@ const AUX_USERS={
 let currentRole='auxiliar',currentUser=null,presencas={},generoAux='M',rankFilt='todos';
 let membrosExtras = {};    // {filaKey: [nomes adicionados pelo cooperador]}
 let visitasPorData = {};   // {"data|fila": [{id, nome}]}
-let membrosRemovidos = {}; // {filaKey: [nomes removidos]}
+let membrosRemovidos = {}; // {filaKey: [nomes removidos]} — legado, mantido para compatibilidade
+let membrosInativos = {};  // {nome: {fila: filaKey, inativadoEm: 'DD/MM/YYYY'}}
 let datasNasc = {};        // {nome: "DD/MM/YYYY"}
 let batismos = {};         // {nome: true/false}
 
@@ -923,6 +951,57 @@ function renderBatismo(){
   document.getElementById('batismo-naobatizados').innerHTML=naoBat||'<div class="empty">Todos batizados! 🎉</div>';
 }
 
+async function reativarMembro(nome){
+  const dados = membrosInativos[nome];
+  if(!dados) return;
+
+  // Determinar fila correta pela idade atual
+  const nasc = datasNasc[nome];
+  let filaDestino = dados.fila; // fila de origem como fallback
+
+  if(nasc){
+    const idade = calcIdade(nasc);
+    if(idade !== null){
+      // Encontrar fila correta pela idade, mantendo o gênero original
+      const genero = dados.fila.slice(-1); // 'M' ou 'F'
+      const filasGenero = ['1','2','3','4'].map(n=>n+genero);
+      for(const fk of filasGenero.reverse()){
+        if(idade >= IDADE_MIN_FILA[fk]){
+          filaDestino = fk;
+          break;
+        }
+      }
+    }
+  }
+
+  // Remover da lista de inativos
+  delete membrosInativos[nome];
+  await saveMembrosInativos();
+
+  // Remover de membrosRemovidos
+  Object.keys(membrosRemovidos).forEach(fk=>{
+    membrosRemovidos[fk] = membrosRemovidos[fk].filter(n=>n!==nome);
+  });
+  await saveMembrosRemovidos();
+
+  // Se a fila destino é diferente da original, registrar como mudança
+  // ou adicionar em membrosExtras se não é membro original
+  const originais = MEMBROS[filaDestino]?.membros || [];
+  if(!originais.includes(nome)){
+    if(!membrosExtras[filaDestino]) membrosExtras[filaDestino]=[];
+    if(!membrosExtras[filaDestino].includes(nome)) membrosExtras[filaDestino].push(nome);
+    await saveMembrosExtras();
+  }
+
+  const filaLabel = MEMBROS[filaDestino]?.label || filaDestino;
+  const filaOrigLabel = MEMBROS[dados.fila]?.label || dados.fila;
+  const msg = filaDestino !== dados.fila
+    ? `✅ ${nome} reativado!\nFila atualizada: ${filaOrigLabel} → ${filaLabel} (pela idade)`
+    : `✅ ${nome} reativado na ${filaLabel}!`;
+  alert(msg);
+  renderMembros();
+}
+
 function getFilaAtual(nome){
   // Retorna a fila atual do membro (considera múltiplas mudanças)
   const mov=mudancasFila[nome];
@@ -1064,10 +1143,11 @@ function getMembrosAtuais(filaKey){
   });
   // Adicionar membros extras cadastrados pelo Cooperador
   const extras = (membrosExtras[filaKey]||[]).filter(n=>!ficam.includes(n)&&!chegaram.includes(n));
-  // Remover membros que foram excluídos pelo Cooperador
+  // Remover membros inativos e removidos
   const removidos = membrosRemovidos[filaKey] || [];
-  const todos = [...ficam, ...chegaram, ...extras].filter(m => !removidos.includes(m));
-  // Juntar e ordenar alfabeticamente
+  const todos = [...ficam, ...chegaram, ...extras].filter(m => 
+    !removidos.includes(m) && !membrosInativos[m]
+  );
   return todos.sort((a,b) => a.localeCompare(b,'pt-BR'));
 }
 
@@ -1121,6 +1201,7 @@ async function loadData(){
   });
   try{const r=await window._fbGet('membros_extras');if(r) membrosExtras=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('membros_removidos');if(r) membrosRemovidos=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('membros_inativos');if(r) membrosInativos=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('visitas_por_data');if(r) visitasPorData=JSON.parse(r);}catch(e){}
   // Datas de nascimento pré-carregadas da planilha master (57 membros)
   const DATAS_NASC_MASTER = {"Alice (Ira. Paty)": "17/08/2020", "Benício (Filho - Maigel)": "16/07/2024", "Elisa (Ira. Thaís & Ir. Anderson)": "03/02/2021", "Ester (Ira. Cláudia & Ir. Misael)": "27/10/2020", "Henry (Ir. Daniel & Ira. Gabriela)": "21/03/2022", "João (Primo do Murilo - Jacareí)": "23/11/2018", "Gabriela (Bebê - Ira. Juliana)": "09/08/2024", "Mateus (Ir. Rafael & Ira. Samara)": "07/08/2023", "Vinicius (Ira. Juliana)": "14/01/2020", "Manuela (Ira. Thaís & Ir. Josimar)": "16/08/2020", "Alícia (Ira. Débora - Barueri)": "17/12/2018", "Caio (Ir. Rodrigo & Ira. Tati)": "22/12/2017", "Anne (Ira. Aline e Ir. Cláudio)": "16/12/2016", "Clarice (Ir. Letícia)": "18/12/2017", "Heitor (Ira. Paty & Ir. Juninho)": "18/12/2016", "Euza (Ira. Delvânia)": "04/10/2017", "Levi (Ir. Rafael & Ira. Samara)": "09/10/2017", "Isadora Ashley": "02/05/2017", "Lorenzo (Ir. Daniel & Ira. Gabriela)": "02/08/2017", "Lorenzo (Ira. Lidiane)": "27/05/2016", "Murilo (Ira. Aline)": "15/05/2017", "Pedrinho (Ir. Rafinha & Ira. Ariele)": "20/01/2017", "Ana Lívia (Ira. Juliana)": "12/10/2015", "Gabriela (Ira. Ana Paula)": "29/01/2013", "Joaquim (Primo do Murilo - Jacareí)": "02/04/2015", "Gabriela (Ira. Kelly)": "23/02/2013", "Lucca (Ir. Rodrigo & Ira. Tati)": "01/06/2013", "Heloísa (Ira. Ione - Vila Maria)": "01/11/2012", "Isys (Ira. Bete)": "08/10/2015", "Rodrigo (Ir. Ismael & Ira. Regina)": "09/06/2014", "Rebeca (Ir. Maurício)": "09/05/2015", "Sara (Ira. Lene)": "28/03/2013", "Valentina (Ira. Lidiane)": "04/11/2013", "Caio Gasparetti": "13/04/2009", "Felipe (Auxiliar)": "16/03/2001", "Gabriel (Ir. Maurício)": "10/03/2010", "Guilherme (Auxiliar)": "17/01/2008", "Emily (Ira. Andriele)": "31/10/2011", "Henrique (Ira. Rosana & Ir. Toninho)": "05/01/2010", "Geovanna (Ira. Audrey & Ir. Kleber)": "12/11/2007", "Kaique (Ir. Kleber)": "07/07/2010", "Giovanna (Ira. Silvana)": "21/09/2010", "Isabela (Auxiliar)": "26/09/2002", "Murilo (Auxiliar)": "19/10/2006", "Nicolas (Ira. Letícia)": "15/10/2008", "Nicolas (Ira. Daiane)": "08/07/2007", "Mari Miranda (Auxiliar)": "07/12/1985", "Milena (Auxiliar)": "30/12/2006", "Nicoly (Ira. Bete & Ir. Alexandre)": "18/10/2005", "Pedrão (Ira. Nayara)": "10/03/2009", "Rafaela R.": "10/02/2015", "Sabrina (Auxiliar)": "18/06/2004", "Sâmela": "21/08/2010", "Samuelzinho (Flauta - Ira. Adriana)": "19/09/2005", "Vitão (Ir. Marcelo & Ira. Léia)": "10/02/2011", "Ana Beatriz (São Francisco Xavier)": "04/03/2009", "Vitor (Vila Industrial)": "08/09/2006"};
@@ -1143,6 +1224,9 @@ async function saveMembrosExtras(){
 }
 async function saveMembrosRemovidos(){
   try{ await window._fbSet('membros_removidos', JSON.stringify(membrosRemovidos)); }catch(e){}
+}
+async function saveMembrosInativos(){
+  try{ await window._fbSet('membros_inativos', JSON.stringify(membrosInativos)); }catch(e){}
 }
 async function saveVisitasPorData(){
   try{ await window._fbSet('visitas_por_data', JSON.stringify(visitasPorData)); }catch(e){}
@@ -1205,6 +1289,19 @@ async function submitOficial(){
 }
 
 // ─── TELA MEMBROS (COOPERADOR) ───────────────────────────────────────────────
+let membrosTabAtual = 'ativos';
+
+function setMembrosTab(tab){
+  membrosTabAtual = tab;
+  ['ativos','inativos','visitas'].forEach(t=>{
+    document.getElementById(`membros-tab-${t}`).style.display = t===tab?'block':'none';
+    document.getElementById(`mtab-${t}`).className = 'membros-tab'+(t===tab?' on':'');
+  });
+  if(tab==='ativos') renderMembrosAtivos();
+  else if(tab==='inativos') renderMembrosInativos();
+  else if(tab==='visitas') renderVisitasPendentes();
+}
+
 function renderMembros(){
   // Popular select de filas
   const sel=document.getElementById('novo-membro-fila');
@@ -1215,7 +1312,13 @@ function renderMembros(){
       sel.appendChild(opt);
     });
   }
-  // Lista mestra por fila
+  // Renderizar a tab atual
+  if(membrosTabAtual==='ativos') renderMembrosAtivos();
+  else if(membrosTabAtual==='inativos') renderMembrosInativos();
+  else renderVisitasPendentes();
+}
+
+function renderMembrosAtivos(){
   let html='';
   Object.entries(MEMBROS).forEach(([key,fila])=>{
     const membros=getMembrosAtuais(key);
@@ -1234,10 +1337,12 @@ function renderMembros(){
           const idade=nasc?calcIdade(nasc):null;
           const anivHj=isAnivHoje(nasc);
           const mostrarBat=(key==='3M'||key==='4M'||key==='3F'||key==='4F');
+          const nascBtnTxt=nasc?`📅 ${nasc}`:'📅 Nasc?';
+          const nascBtnCls=nasc?'btn-nasc-coop ok':'btn-nasc-coop pend';
           return `<div class="membro-manage-row ${anivHj?'highlight-mudar':''}">
             <span class="membro-manage-name">${m}${idade!==null?' ('+idade+'a)':''}${anivHj?' 🎂':''}</span>
-            ${nasc?`<span style="font-size:10px;color:var(--muted)">${nasc}</span>`:'<span style="font-size:10px;color:var(--amber)">⚠ sem nasc.</span>'}
-            ${mostrarBat?`<label class="batismo-label"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mE}',this.checked)">⭐ Bat.</label>`:''}
+            ${mostrarBat?`<label class="batismo-label"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mE}',this.checked)">⭐</label>`:''}
+            <button class="${nascBtnCls}" onclick="editarNascCoop('${mE}')">${nascBtnTxt}</button>
             <button class="btn-edit-nome" onclick="editarNomeMembro('${key}','${mE}')">✏️</button>
             <button class="btn-remove-membro" onclick="removerMembro('${key}','${mE}')">✕</button>
           </div>`;
@@ -1246,7 +1351,79 @@ function renderMembros(){
     </div>`;
   });
   document.getElementById('membros-master-list').innerHTML=html;
-  renderVisitasPendentes();
+}
+
+function renderMembrosInativos(){
+  const inativos = Object.entries(membrosInativos);
+  if(!inativos.length){
+    document.getElementById('membros-inativos-list').innerHTML='<div class="empty">Nenhum membro inativo.</div>';
+    return;
+  }
+  // Agrupar por fila
+  const porFila = {};
+  inativos.forEach(([nome, dados])=>{
+    const fk = dados.fila;
+    if(!porFila[fk]) porFila[fk]=[];
+    porFila[fk].push({nome, ...dados});
+  });
+
+  let html='';
+  Object.keys(MEMBROS).forEach(key=>{
+    const lista = porFila[key];
+    if(!lista||!lista.length) return;
+    const fila = MEMBROS[key];
+    html+=`<div class="fila-block" style="margin-bottom:.5rem">
+      <div class="fila-head" onclick="toggleFila('mi-${key}','michev-${key}')">
+        <div class="fila-head-left">
+          <div class="fila-dot ${fila.genero==='M'?'dot-m':'dot-f'}"></div>
+          <div><div class="fila-name">${fila.label}</div><div class="fila-aux">${lista.length} inativo(s)</div></div>
+        </div>
+        <span class="chevron" id="michev-${key}">▼</span>
+      </div>
+      <div class="member-list" id="mi-${key}">
+        ${lista.map(({nome, inativadoEm})=>{
+          const mE=nome.replace(/'/g,"\'").replace(/"/g,'&quot;');
+          const nasc=datasNasc[nome]||'';
+          const idade=nasc?calcIdade(nasc):null;
+          const nascStr=nasc?` · nasc: ${nasc}`:'';
+          // Verificar se reativação mudaria a fila
+          let filaDestLabel='';
+          if(nasc && idade!==null){
+            const genero=key.slice(-1);
+            const filasG=['1','2','3','4'].map(n=>n+genero).reverse();
+            for(const fk of filasG){
+              if(idade>=IDADE_MIN_FILA[fk]){
+                if(fk!==key) filaDestLabel=` → ${MEMBROS[fk]?.label?.split('—')[0]?.trim()||fk}`;
+                break;
+              }
+            }
+          }
+          return `<div class="inativo-row">
+            <div style="flex:1;min-width:0">
+              <div class="inativo-nome">${nome}${idade!==null?' ('+idade+'a)':''}</div>
+              <div class="inativo-info">Inativado em ${inativadoEm||'?'}${nascStr}${filaDestLabel?'<span style="color:var(--amber)"> ⬆️'+filaDestLabel+'</span>':''}</div>
+            </div>
+            <button class="btn-reativar" onclick="reativarMembro('${mE}')">↩ Reativar</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('membros-inativos-list').innerHTML=html;
+}
+
+async function editarNascCoop(nome){
+  const atual = datasNasc[nome]||'';
+  const novo = prompt(`Data de nascimento de ${nome}:\n(formato DD/MM/AAAA)`, atual);
+  if(novo===null) return;
+  const limpo = novo.trim();
+  if(limpo && !/^\d{2}\/\d{2}\/\d{4}$/.test(limpo)){
+    alert('Formato inválido. Use DD/MM/AAAA'); return;
+  }
+  if(limpo) datasNasc[nome]=limpo;
+  else delete datasNasc[nome];
+  await saveDatasNasc();
+  renderMembrosAtivos();
 }
 
 async function adicionarMembro(){
@@ -1270,19 +1447,14 @@ async function adicionarMembro(){
 }
 
 async function removerMembro(filaKey, nome){
-  if(!confirm(`Remover "${nome}" da ${MEMBROS[filaKey]?.label||filaKey}?\n\nEsta ação não afeta o histórico de presenças.`)) return;
+  if(!confirm(`Inativar "${nome}"?\n\nO membro some das listas mas todo o histórico é preservado. Pode ser reativado a qualquer momento na aba Membros.`)) return;
 
-  // 1. Remover de membrosExtras (membros adicionados pelo Cooperador)
-  if(membrosExtras[filaKey]){
-    membrosExtras[filaKey]=membrosExtras[filaKey].filter(n=>n!==nome);
-    await saveMembrosExtras();
-  }
-  // 2. Reverter mudança de fila se aplicável
-  if(mudancasFila[nome]){
-    delete mudancasFila[nome];
-    await saveMudancasFila();
-  }
-  // 3. Marcar como removido — funciona para qualquer membro, incluindo os originais do código
+  // Registrar como inativo com fila de origem e data
+  const hoje = getToday();
+  membrosInativos[nome] = {fila: filaKey, inativadoEm: hoje};
+  await saveMembrosInativos();
+
+  // Também manter em membrosRemovidos para compatibilidade com getMembrosAtuais
   if(!membrosRemovidos[filaKey]) membrosRemovidos[filaKey]=[];
   if(!membrosRemovidos[filaKey].includes(nome)){
     membrosRemovidos[filaKey].push(nome);
