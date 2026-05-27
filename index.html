@@ -1469,11 +1469,12 @@ function renderVisitasPendentes(){
   Object.entries(visitasPorData).forEach(([chave, visitas])=>{
     const [data,fila]=chave.split('|');
     visitas.forEach(v=>{
-      todas.push({...v, data, fila, chave});
+      // Só mostrar visitas sem status (pendentes de avaliação)
+      if(!v.status||v.status==='') todas.push({...v, data, fila, chave}); // apenas pendentes
     });
   });
   if(!todas.length){
-    document.getElementById('visitas-pendentes-list').innerHTML='<div class="empty">Nenhuma visita registrada ainda.</div>';
+    document.getElementById('visitas-pendentes-list').innerHTML='<div class="empty">Nenhuma visita pendente de avaliação.</div>';
     return;
   }
   // Ordenar por data mais recente
@@ -1496,11 +1497,81 @@ function renderVisitasPendentes(){
 function editarVisita(id, chave, nomeAtual){
   const nomeEl=document.getElementById(`visita-nome-${id}`);
   if(!nomeEl) return;
-  nomeEl.innerHTML=`<input style="border:1px solid var(--teal);border-radius:6px;padding:4px 8px;font-size:12px;width:100%;outline:none" 
-    value="${nomeAtual}" id="visita-edit-input-${id}"
-    onkeydown="if(event.key==='Enter') salvarEdicaoVisita('${id}','${chave}')">
+  nomeEl.innerHTML=`
+    <div style="position:relative">
+      <input style="border:1px solid var(--teal);border-radius:6px;padding:4px 8px;font-size:12px;width:100%;outline:none"
+        value="${nomeAtual}" id="visita-edit-input-${id}"
+        oninput="buscarMembroVisita('${id}','${chave}')"
+        onkeydown="if(event.key==='Enter') salvarEdicaoVisita('${id}','${chave}')">
+      <div id="visita-sugestao-${id}" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--surface);border:1px solid var(--teal);border-radius:0 0 8px 8px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:99;font-size:12px"></div>
+    </div>
     <button onclick="salvarEdicaoVisita('${id}','${chave}')" style="margin-top:4px;padding:3px 10px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer">Salvar</button>`;
   document.getElementById(`visita-edit-input-${id}`)?.focus();
+}
+
+function buscarMembroVisita(id, chave){
+  const input = document.getElementById(`visita-edit-input-${id}`);
+  const sugestao = document.getElementById(`visita-sugestao-${id}`);
+  if(!input || !sugestao) return;
+  const query = input.value.trim().toLowerCase();
+
+  if(query.length < 2){ sugestao.style.display='none'; return; }
+
+  // Buscar em todos os membros de todas as filas
+  const todos = [];
+  Object.keys(MEMBROS).forEach(fk=>{
+    getMembrosAtuais(fk).forEach(m=>{
+      if(m.toLowerCase().includes(query)) todos.push({nome:m, fila:fk});
+    });
+  });
+
+  if(!todos.length){ sugestao.style.display='none'; return; }
+
+  sugestao.style.display='block';
+  sugestao.innerHTML = todos.slice(0,5).map(({nome,fila})=>`
+    <div onclick="vincularMembroVisita('${id}','${chave}','${nome.replace(/'/g,"\'").replace(/"/g,'&quot;')}','${fila}')"
+      style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"
+      onmouseover="this.style.background='var(--teal-l)'" onmouseout="this.style.background=''">
+      <span style="font-weight:500">${nome}</span>
+      <span style="font-size:10px;color:var(--muted)">${MEMBROS[fila]?.label?.split('—')[1]?.trim()||fila}</span>
+    </div>`).join('') +
+    (todos.length>5?`<div style="padding:5px 10px;font-size:10px;color:var(--hint);text-align:center">+${todos.length-5} resultados — continue digitando</div>`:'');
+}
+
+async function vincularMembroVisita(id, chave, nomeMembro, filaMembro){
+  const [data, filaVisita] = chave.split('|');
+
+  // Confirmar vínculo
+  const filaLabel = MEMBROS[filaMembro]?.label || filaMembro;
+  if(!confirm(`Vincular à presença de "${nomeMembro}" (${filaLabel})?\n\nA visita será convertida em presença oficial deste membro.`)) return;
+
+  // 1. Adicionar presença do membro na fila ATUAL (considera mudança de fila)
+  const filaAtual = getFilaAtual(nomeMembro) || filaMembro;
+  const pkey = `${data}|${filaAtual}`;
+  if(!presencas[pkey]) presencas[pkey]=[];
+  if(!presencas[pkey].includes(nomeMembro)) presencas[pkey].push(nomeMembro);
+
+  // 2. Remover o nome da visita das presenças (evitar duplicata)
+  const v = visitasPorData[chave]?.find(x=>x.id===id);
+  if(v){
+    const pkeyVisita = `${data}|${filaVisita}`;
+    if(presencas[pkeyVisita]){
+      presencas[pkeyVisita] = presencas[pkeyVisita].filter(n=>n!==v.nome);
+    }
+    // 3. Marcar visita como vinculada (histórico preservado com nome do membro)
+    v.nome = nomeMembro;
+    v.status = 'vinculada';
+    v.membroVinculado = nomeMembro;
+    v.filaVinculada = filaAtual;
+  }
+
+  await saveData();
+  await saveVisitasPorData();
+
+  // Esconder sugestão e re-renderizar
+  document.getElementById(`visita-sugestao-${id}`)?.style && (document.getElementById(`visita-sugestao-${id}`).style.display='none');
+  renderVisitasPendentes();
+  alert(`✅ Presença de ${nomeMembro} registrada na ${MEMBROS[filaAtual]?.label||filaAtual}!`);
 }
 
 async function salvarEdicaoVisita(id, chave){
@@ -1532,7 +1603,10 @@ async function promoverVisita(id, chave, fila, nome){
     membrosExtras[fila].push(nomeAtual);
     await saveMembrosExtras();
   }
-  await descartarVisita(id, chave);
+  // Marcar como promovida (não remove do histórico)
+  const v=visitasPorData[chave]?.find(x=>x.id===id);
+  if(v){ v.nome=nomeAtual; v.status='promovida'; }
+  await saveVisitasPorData();
   const alertEl=document.getElementById('membro-alert');
   if(alertEl){
     alertEl.innerHTML=`<div class="alert alert-ok">✅ ${nomeAtual} promovido a membro oficial da ${MEMBROS[fila]?.label||fila}!</div>`;
@@ -1543,8 +1617,14 @@ async function promoverVisita(id, chave, fila, nome){
 
 async function descartarVisita(id, chave){
   if(!visitasPorData[chave]) return;
-  visitasPorData[chave]=visitasPorData[chave].filter(v=>v.id!==id);
-  if(visitasPorData[chave].length===0) delete visitasPorData[chave];
+  // Pegar nome mais atualizado (pode ter sido editado)
+  const nomeEl=document.getElementById(`visita-nome-${id}`);
+  const nomeAtual=nomeEl?.querySelector('input')?.value?.trim()||null;
+  const v=visitasPorData[chave].find(x=>x.id===id);
+  if(v){
+    if(nomeAtual && nomeAtual!==v.nome) v.nome=nomeAtual;
+    v.status='descartada'; // marca como descartada mas NÃO remove
+  }
   await saveVisitasPorData();
   renderVisitasPendentes();
 }
@@ -1559,9 +1639,25 @@ function renderVisitasPainel(data){
   return `<div class="card" style="margin-top:.75rem">
     <div class="card-title">👋 Visitas neste domingo</div>
     ${filasComVisitas.map(({fila,visitas})=>`
-      <div style="margin-bottom:.5rem">
+      <div style="margin-bottom:.625rem">
         <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">${MEMBROS[fila]?.label||fila}</div>
-        ${visitas.map(v=>`<div style="font-size:12px;padding:3px 0;color:var(--text)">• ${v.nome}</div>`).join('')}
+        ${visitas.map(v=>{
+          const icon = v.status==='promovida'
+            ? '<span style="color:var(--teal-d);font-size:11px" title="Promovida a membro">✅</span>'
+            : v.status==='vinculada'
+            ? '<span style="color:var(--teal-d);font-size:11px" title="Vinculada a membro existente">🔗</span>'
+            : v.status==='descartada'
+            ? '<span style="color:var(--hint);font-size:11px" title="Avaliada — não promovida">○</span>'
+            : '<span style="color:var(--amber);font-size:11px" title="Pendente de avaliação">◎</span>';
+          const nomeStyle = v.status==='descartada'
+            ? 'color:var(--hint)'
+            : (v.status==='promovida'||v.status==='vinculada')
+            ? 'color:var(--teal-d)'
+            : 'color:var(--text)';
+          return `<div style="font-size:12px;padding:3px 0;display:flex;align-items:center;gap:6px">
+            ${icon}<span style="${nomeStyle}">${v.nome}</span>
+          </div>`;
+        }).join('')}
       </div>`).join('')}
   </div>`;
 }
