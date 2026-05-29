@@ -320,7 +320,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
         <button class="filter-btn" id="aux-f-f" onclick="setGenero('F')">♀ Meninas</button>
       </div>
       <button class="filter-btn" onclick="showScreen('aniversariantes');renderAniversariantes()" style="border-color:var(--amber);color:var(--amber)">🎂 Aniversariantes</button>
-      <button class="filter-btn" onclick="showScreen('relatorio-aux');renderRelatorioAux()" style="border-color:var(--blue);color:var(--blue)">📊 Relatório</button>
+      <button class="filter-btn" onclick="showScreen('relatorio-aux');renderRelatorioAux()" style="border-color:var(--teal);color:var(--teal-d)">📊 Relatório</button>
     </div>
     <div id="aux-filas"></div>
     <div class="action-bar"><span class="sel-count" id="aux-count"></span><button class="btn-save" onclick="salvarPresenca()">💾 Salvar presença</button></div>
@@ -1888,11 +1888,9 @@ function renderRelatorioAux(){
   const nomeFila = fu!=='all' ? MEMBROS[fu]?.label : 'Todas as Filas';
   document.getElementById('rel-aux-titulo').textContent = `📊 ${nomeFila}`;
 
-  const hoje = getToday();
   const ultima = getUltimaReuniao();
   const reunioesRealizadas = DOMINGOS.filter(d=>dateLE(d,ultima)&&TOTAL_OFICIAL_2026[d]!=null);
   const nReun = reunioesRealizadas.length;
-
   const filas = fu==='all' ? Object.keys(MEMBROS) : [fu];
   let html = '';
 
@@ -1902,15 +1900,13 @@ function renderRelatorioAux(){
     if(!membros.length) return;
 
     // KPIs da fila
-    const totalPres = reunioesRealizadas.reduce((s,d)=>s+getPresentes(d,fk).filter(m=>membros.includes(m)).length,0);
+    const totalPres = reunioesRealizadas.reduce((s,d)=>s+getPresentes(d,fk).filter(m=>membros.includes(m)).length, 0);
     const maxPossivel = membros.length * nReun;
-    const pctFila = maxPossivel>0?Math.round(totalPres/maxPossivel*100):0;
+    const pctFila = maxPossivel>0 ? Math.round(totalPres/maxPossivel*100) : 0;
     const filasBat = ['3M','4M','3F','4F'];
     const mostrarBat = filasBat.includes(fk);
     const batCount = mostrarBat ? membros.filter(m=>batismos[m]).length : 0;
     const pctBat = mostrarBat && membros.length>0 ? Math.round(batCount/membros.length*100) : 0;
-
-    // Reuniões enviadas pela fila
     const enviadas = reunioesRealizadas.filter(d=>getPresentes(d,fk).length>0).length;
 
     html += `<div class="card" style="margin-bottom:.75rem">
@@ -1918,22 +1914,25 @@ function renderRelatorioAux(){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.875rem">
         <div class="rel-stat"><div class="rel-stat-title">Freq. média</div><div class="rel-stat-val">${pctFila}%</div></div>
         <div class="rel-stat"><div class="rel-stat-title">Enviadas</div><div class="rel-stat-val">${enviadas}/${nReun}</div></div>
-        ${mostrarBat?`<div class="rel-stat"><div class="rel-stat-title">Batizados</div><div class="rel-stat-val">${pctBat}%</div></div>`:`<div class="rel-stat"><div class="rel-stat-title">Membros</div><div class="rel-stat-val">${membros.length}</div></div>`}
+        ${mostrarBat
+          ? `<div class="rel-stat"><div class="rel-stat-title">Batizados</div><div class="rel-stat-val">${pctBat}%</div></div>`
+          : `<div class="rel-stat"><div class="rel-stat-title">Membros</div><div class="rel-stat-val">${membros.length}</div></div>`}
       </div>
       <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em">Frequência individual</div>
       ${membros.map(m=>{
-        const presMembro = reunioesRealizadas.filter(d=>getPresentes(d,fk).includes(m)||DOMINGOS.filter(d2=>d2<=ultima).some(d2=>getPresentes(d2,getFilaAtual(m)||fk).includes(m)&&d2===d)).length;
-        // Contar presenças em todas as filas por onde passou
-        const totalM = DOMINGOS.filter(d=>dateLE(d,ultima)).reduce((s,d)=>{
-          return s + Object.keys(MEMBROS).filter(k2=>getPresentes(d,k2).includes(m)).length>0?1:0;
-        },0);
-        const pctM = nReun>0?Math.round(totalM/nReun*100):0;
-        const apto = aptoMudarFila(m,fk)&&PROX_FILA[fk];
+        // Contar presenças do membro em TODAS as filas por onde passou (consolidado)
+        let totalM = 0;
+        reunioesRealizadas.forEach(d=>{
+          const apareceu = Object.keys(MEMBROS).some(k2=>getPresentes(d,k2).includes(m));
+          if(apareceu) totalM++;
+        });
+        const pctM = nReun>0 ? Math.round(totalM/nReun*100) : 0;
+        const apto = aptoMudarFila(m,fk) && PROX_FILA[fk];
         const aniv = isAnivHoje(datasNasc[m]||'');
-        const barColor = pctM>=75?'var(--teal)':pctM>=50?'var(--amber)':'var(--red)';
+        const barColor = pctM>=75 ? 'var(--teal)' : pctM>=50 ? 'var(--amber)' : 'var(--red)';
         return `<div class="rel-row">
           <span class="rel-nome">${m}${aniv?' 🎂':''}${apto?`<span class="rel-badge badge-apto">⬆️ subir</span>`:''}${datasNasc[m]?'':' <span style="font-size:9px;color:var(--amber)">⚠nasc</span>'}</span>
-          <div class="rel-bar-wrap"><div class="rel-bar-fill" style="width:${pctM}%;background:${barColor}"></div></div>
+          <div class="rel-bar-wrap" style="width:80px"><div class="rel-bar-fill" style="width:${pctM}%;background:${barColor}"></div></div>
           <span class="rel-pct" style="color:${barColor}">${pctM}%</span>
         </div>`;
       }).join('')}
