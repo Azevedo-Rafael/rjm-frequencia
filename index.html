@@ -180,6 +180,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
 .btn-nasc-coop{padding:3px 9px;font-size:10px;border-radius:99px;border:1px solid var(--border);background:transparent;cursor:pointer;white-space:nowrap}
 .btn-nasc-coop.ok{border-color:var(--teal);color:var(--teal-d);background:var(--teal-l)}
 .btn-nasc-coop.pend{border-color:var(--amber);color:var(--amber);background:var(--amber-l)}
+.sem-recit-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-top:1.5px dashed var(--border);margin-top:6px}
+.sem-recit-cb{width:16px;height:16px;accent-color:var(--muted);cursor:pointer;flex-shrink:0}
+.sem-recit-label{font-size:12px;font-style:italic;color:var(--hint);flex:1;cursor:pointer;user-select:none}
+.sem-recit-row.marcado .sem-recit-label{color:var(--amber);font-weight:500}
 .aniv-card{background:linear-gradient(135deg,var(--teal-l),#fff);border:1px solid var(--teal);border-radius:12px;padding:1rem;margin-bottom:.75rem}
 .aniv-hoje-card{background:linear-gradient(135deg,#FFF8E1,#FFFDE7);border:2px solid var(--amber);border-radius:12px;padding:1rem;margin-bottom:.75rem}
 .aniv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:13px}
@@ -225,6 +229,42 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
 .btn-confirm{padding:8px 16px;border:none;border-radius:8px;background:var(--teal);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
 .btn-confirm:hover{background:var(--teal-d)}
 @media(max-width:500px){.stat-grid{grid-template-columns:1fr 1fr}.stat-grid .stat:last-child{grid-column:span 2}.nav-btn{font-size:10px;padding:6px 2px}.trend-grid{grid-template-columns:1fr}}
+
+/* Calendário */
+.cal-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem}
+.cal-title{font-size:14px;font-weight:600;color:var(--text)}
+.cal-nav{padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:transparent;cursor:pointer;font-size:14px;color:var(--muted)}
+.cal-nav:hover{background:var(--bg)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:10px;font-weight:600;color:var(--hint);padding:4px 0}
+.cal-day{text-align:center;padding:6px 2px;border-radius:7px;font-size:12px;cursor:default;color:var(--hint);min-height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.cal-day.domingo{color:var(--text);cursor:pointer;font-weight:500}
+.cal-day.domingo:hover{background:var(--teal-l)}
+.cal-day.selected{background:var(--teal)!important;color:#fff!important;font-weight:700}
+.cal-day.hoje{border:1.5px solid var(--teal)}
+.cal-day.pend-dot::after{content:'';display:block;width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.cal-day.disabled{opacity:.3;cursor:not-allowed}
+.cal-selected-label{font-size:12px;color:var(--muted);margin-top:.5rem;text-align:center}
+
+/* Relatório auxiliar */
+.rel-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem}
+.rel-stat-title{font-size:11px;color:var(--muted);margin-bottom:4px}
+.rel-stat-val{font-size:20px;font-weight:700}
+.rel-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.rel-row:last-child{border:none}
+.rel-nome{flex:1;color:var(--text)}
+.rel-pct{min-width:36px;text-align:right;font-weight:600;font-size:11px}
+.rel-bar-wrap{width:60px;background:var(--bg);border-radius:99px;height:5px;overflow:hidden}
+.rel-bar-fill{height:100%;border-radius:99px;background:var(--teal)}
+.rel-badge{font-size:9px;padding:1px 5px;border-radius:99px;font-weight:600;margin-left:3px}
+.badge-apto{background:var(--amber-l);color:var(--amber)}
+.badge-aniv{background:#FFF8E1;color:var(--amber)}
+
+/* Transfer modal (cooperador) */
+.transfer-fila-btn{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;border:1px solid var(--border);border-radius:9px;background:transparent;cursor:pointer;width:100%;margin-bottom:6px;transition:all .15s;text-align:left}
+.transfer-fila-btn:hover{border-color:var(--teal);background:var(--teal-l)}
+.transfer-fila-btn.atual{border-color:var(--teal);background:var(--teal-l);opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -265,17 +305,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
     <button class="nav-btn" onclick="goTab('aniversariantes',this)">🎂 Aniversários</button>
   </div>
   <div id="screen-auxiliar" style="display:none">
-    <div class="card"><div class="card-title">📅 Data da reunião</div><select class="date-sel" id="aux-data" onchange="renderFilasAux()"></select></div>
+    <div class="cal-wrap" id="aux-cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="calNavAux(-1)">‹</button>
+        <span class="cal-title" id="aux-cal-title"></span>
+        <button class="cal-nav" onclick="calNavAux(1)">›</button>
+      </div>
+      <div class="cal-grid" id="aux-cal-grid"></div>
+      <div class="cal-selected-label" id="aux-cal-label">Selecione um domingo</div>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
       <div style="display:flex;gap:6px">
         <button class="filter-btn on" id="aux-f-m" onclick="setGenero('M')">♂ Meninos</button>
         <button class="filter-btn" id="aux-f-f" onclick="setGenero('F')">♀ Meninas</button>
       </div>
       <button class="filter-btn" onclick="showScreen('aniversariantes');renderAniversariantes()" style="border-color:var(--amber);color:var(--amber)">🎂 Aniversariantes</button>
+      <button class="filter-btn" onclick="showScreen('relatorio-aux');renderRelatorioAux()" style="border-color:var(--blue);color:var(--blue)">📊 Relatório</button>
     </div>
     <div id="aux-filas"></div>
     <div class="action-bar"><span class="sel-count" id="aux-count"></span><button class="btn-save" onclick="salvarPresenca()">💾 Salvar presença</button></div>
     <div id="aux-alert" style="margin-top:.625rem"></div>
+  </div>
+  <div id="screen-relatorio-aux" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
+      <button onclick="showScreen('auxiliar');renderFilasAux()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted)">← Voltar</button>
+      <span style="font-size:13px;font-weight:600;color:var(--text)" id="rel-aux-titulo">Relatório da Fila</span>
+    </div>
+    <div id="rel-aux-content"></div>
   </div>
   <div id="screen-painel" style="display:none">
     <div class="stat-grid" id="painel-stats"></div>
@@ -407,6 +463,7 @@ let visitasPorData = {};   // {"data|fila": [{id, nome}]}
 let membrosRemovidos = {}; // {filaKey: [nomes removidos]} — legado, mantido para compatibilidade
 let membrosInativos = {};  // {nome: {fila: filaKey, inativadoEm: 'DD/MM/YYYY'}}
 let datasNasc = {};        // {nome: "DD/MM/YYYY"}
+let semRecit = {};         // {"data|fila": true} — marcado sem recitativos
 let batismos = {};         // {nome: true/false}
 
 function getToday(){const d=new Date();return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
@@ -466,6 +523,7 @@ function enterApp(){
     if(f!=='all') generoAux=f.endsWith('M')?'M':'F';
     document.getElementById('aux-f-m').className='filter-btn'+(generoAux==='M'?' on':'');
     document.getElementById('aux-f-f').className='filter-btn'+(generoAux==='F'?' on':'');
+    renderCalAux();
     renderFilasAux();
   }
 }
@@ -478,27 +536,102 @@ function doLogout(){
   renderLoginFields();
 }
 
+// ─── CALENDÁRIO ──────────────────────────────────────────────────────────────
+let calAuxMes = new Date().getMonth();
+let calAuxAno = new Date().getFullYear();
+let calAuxDataSel = '';
+
+const MESES_CAL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
 function buildDateSelects(defaultDate){
+  const ultima = getUltimaReuniao();
+  calAuxDataSel = defaultDate || ultima;
+  // Iniciar calendário no mês da data selecionada
+  const [d,m,a] = calAuxDataSel.split('/').map(Number);
+  calAuxMes = m-1; calAuxAno = a;
+  renderCalAux();
+  // Painel do cooperador — mantém select normal
   const hoje=getToday();
-  const ultima=getUltimaReuniao();
-  // Para o select do auxiliar: marcar pendências da fila dele
-  const fuAux=currentUser?.fila||'all';
-  let optsAux='', optsCoop='';
+  let optsCoop='';
   [...DOMINGOS].reverse().forEach(d=>{
-    const lbl=d===hoje?' (hoje)':'';
-    // Verificar pendência para o auxiliar (só datas passadas)
-    let pendIcon='';
-    if(fuAux!=='all' && dateLE(d,ultima)){
-      const pres=getPresentes(d,fuAux);
-      if(pres.length===0) pendIcon='⚠ ';
-    }
-    optsAux+=`<option value="${d}">${pendIcon}${d}${lbl}</option>`;
-    optsCoop+=`<option value="${d}">${d}${lbl}</option>`;
+    optsCoop+=`<option value="${d}">${d}${d===hoje?' (hoje)':''}</option>`;
   });
-  const elAux=document.getElementById('aux-data');
-  if(elAux){elAux.innerHTML=optsAux;elAux.value=defaultDate||ultima;}
   const elCoop=document.getElementById('painel-data');
   if(elCoop){elCoop.innerHTML=optsCoop;elCoop.value=defaultDate||ultima;}
+}
+
+function renderCalAux(){
+  const fuAux = currentUser?.fila||'all';
+  const ultima = getUltimaReuniao();
+  const hoje = getToday();
+  const titleEl = document.getElementById('aux-cal-title');
+  const gridEl  = document.getElementById('aux-cal-grid');
+  const labelEl = document.getElementById('aux-cal-label');
+  if(!titleEl||!gridEl) return;
+
+  titleEl.textContent = `${MESES_CAL[calAuxMes]} ${calAuxAno}`;
+
+  // Dias da semana header
+  let html = DIAS_SEMANA.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  // Primeiro dia do mês
+  const primeiroDia = new Date(calAuxAno, calAuxMes, 1).getDay();
+  for(let i=0;i<primeiroDia;i++) html+=`<div class="cal-day"></div>`;
+
+  // Dias do mês
+  const diasNoMes = new Date(calAuxAno, calAuxMes+1, 0).getDate();
+  for(let dia=1; dia<=diasNoMes; dia++){
+    const dd = String(dia).padStart(2,'0');
+    const mm = String(calAuxMes+1).padStart(2,'0');
+    const dateStr = `${dd}/${mm}/${calAuxAno}`;
+    const isDomingo = new Date(calAuxAno, calAuxMes, dia).getDay()===0;
+    const isFuturo = !dateLE(dateStr, ultima);
+    const isSelected = dateStr===calAuxDataSel;
+    const isHoje = dateStr===hoje;
+    const isDomInDomingos = DOMINGOS.includes(dateStr);
+
+    // Verificar pendência
+    let isPend = false;
+    if(isDomingo && isDomInDomingos && !isFuturo && fuAux!=='all'){
+      isPend = getPresentes(dateStr, fuAux).length===0;
+    }
+
+    let cls = 'cal-day';
+    if(isDomingo && isDomInDomingos && !isFuturo) cls += ' domingo';
+    else if(isDomingo && isDomInDomingos && isFuturo) cls += ' domingo disabled';
+    if(isSelected) cls += ' selected';
+    if(isHoje) cls += ' hoje';
+    if(isPend && !isSelected) cls += ' pend-dot';
+
+    const onclick = (isDomingo && isDomInDomingos && !isFuturo)
+      ? `onclick="selectCalAux('${dateStr}')"`
+      : '';
+
+    html+=`<div class="${cls}" ${onclick}>${dia}</div>`;
+  }
+
+  gridEl.innerHTML = html;
+  if(labelEl) labelEl.textContent = calAuxDataSel
+    ? `Selecionado: ${calAuxDataSel}`
+    : 'Selecione um domingo';
+}
+
+function calNavAux(dir){
+  calAuxMes += dir;
+  if(calAuxMes > 11){ calAuxMes=0; calAuxAno++; }
+  if(calAuxMes < 0){ calAuxMes=11; calAuxAno--; }
+  renderCalAux();
+}
+
+function selectCalAux(dateStr){
+  calAuxDataSel = dateStr;
+  renderCalAux();
+  renderFilasAux();
+}
+
+function getAuxData(){
+  return calAuxDataSel || getUltimaReuniao();
 }
 
 function setGenero(g){
@@ -509,7 +642,7 @@ function setGenero(g){
 }
 
 function renderFilasAux(){
-  const data=document.getElementById('aux-data').value;
+  const data=getAuxData();
   const fu=currentUser?.fila||'all';
   let filas=Object.entries(MEMBROS).filter(([k])=>k.endsWith(generoAux));
   if(fu!=='all') filas=filas.filter(([k])=>k===fu);
@@ -529,6 +662,7 @@ function renderFilasAux(){
     // Visitas já registradas nesta data/fila
     const vkey=`${data}|${key}`;
     const visitasNestaFila=(visitasPorData[vkey]||[]);
+    const isSemRecit = !!(semRecit[`${data}|${key}`]);
     const totalComVisitas=pres.length;
     html+=`<div class="fila-block">
       <div class="fila-head" onclick="toggleFila('fl-${key}','chev-${key}')">
@@ -561,15 +695,30 @@ function renderFilasAux(){
         }).join('')}
         <div class="visita-section" id="visitas-section-${key}">
           <div class="visita-section-title">👋 Visitas / Nome extra</div>
-          ${visitasNestaFila.map(v=>`
-            <div class="visita-row">
+          ${visitasNestaFila.map(v=>{
+            const vE=v.id;
+            const nomeDisplay=v.nome;
+            return `<div class="visita-row" id="vrow-${vE}">
               <input type="checkbox" class="member-cb" checked disabled>
-              <span class="visita-nome">${v.nome}</span>
-            </div>`).join('')}
+              <span class="visita-nome" id="vnome-${vE}">${nomeDisplay}</span>
+              <span style="display:flex;gap:4px;margin-left:auto;flex-shrink:0">
+                <button onclick="editarVisitaAux('${vE}','${data}','${key}')" style="padding:2px 7px;font-size:10px;border:1px solid var(--border);border-radius:99px;background:transparent;cursor:pointer;color:var(--muted)">✏️</button>
+                <button onclick="excluirVisitaAux('${vE}','${data}','${key}')" style="padding:2px 7px;font-size:10px;border:1px solid var(--red-l);border-radius:99px;background:transparent;cursor:pointer;color:var(--red)">✕</button>
+              </span>
+            </div>`;
+          }).join('')}
           <div class="visita-add-row">
             <input class="visita-input" id="visita-input-${key}" placeholder="Nome da visita..." onkeydown="if(event.key==='Enter') submitVisita('${key}')">
             <button class="btn-visita-add" onclick="submitVisita('${key}')">+ Adicionar</button>
           </div>
+        </div>
+        <div class="sem-recit-row ${isSemRecit?'marcado':''}" id="semrecit-row-${key}">
+          <input type="checkbox" class="sem-recit-cb" id="semrecit-cb-${key}"
+            ${isSemRecit?'checked':''}
+            onchange="toggleSemRecit('${key}',this.checked)">
+          <label class="sem-recit-label" for="semrecit-cb-${key}">
+            Não houveram recitativos neste domingo
+          </label>
         </div>
       </div>
     </div>`;
@@ -581,7 +730,7 @@ function renderFilasAux(){
 function toggleFila(lid,cid){document.getElementById(lid)?.classList.toggle('open');document.getElementById(cid)?.classList.toggle('open');}
 
 function toggleM(fila,nome,checked){
-  const data=document.getElementById('aux-data').value;
+  const data=getAuxData();
   const key=`${data}|${fila}`;
   if(!presencas[key]) presencas[key]=[];
   if(checked){if(!presencas[key].includes(nome)) presencas[key].push(nome);}
@@ -594,7 +743,7 @@ function toggleM(fila,nome,checked){
 
 function addVisitaNome(fila, nome){
   if(!nome?.trim()) return;
-  const n=nome.trim(), data=document.getElementById('aux-data').value;
+  const n=nome.trim(), data=getAuxData();
   const vkey=`${data}|${fila}`;
   if(!visitasPorData[vkey]) visitasPorData[vkey]=[];
   // Evitar duplicata
@@ -629,8 +778,23 @@ function submitVisita(fila){
   if(input) input.value='';
 }
 
+async function toggleSemRecit(filaKey, checked){
+  const data = getAuxData();
+  const chave = `${data}|${filaKey}`;
+  if(checked){
+    semRecit[chave] = true;
+  } else {
+    delete semRecit[chave];
+  }
+  await saveSemRecit();
+  // Atualizar visual da row sem re-render completo
+  const row = document.getElementById(`semrecit-row-${filaKey}`);
+  if(row) row.className = `sem-recit-row${checked?' marcado':''}`;
+  // Não altera contagem de presença
+}
+
 function updateAuxCount(){
-  const data=document.getElementById('aux-data')?.value;if(!data) return;
+  const data=getAuxData();if(!data) return;
   let t=0;Object.keys(MEMBROS).forEach(k=>{t+=getPresentes(data,k).length;});
   const el=document.getElementById('aux-count');if(el) el.textContent=`${t} presente(s) registrado(s)`;
 }
@@ -638,7 +802,7 @@ function updateAuxCount(){
 async function salvarPresenca(){
   await saveData();
   const el=document.getElementById('aux-alert');
-  el.innerHTML=`<div class="alert alert-ok">✅ Presença salva com sucesso para ${document.getElementById('aux-data').value}!</div>`;
+  el.innerHTML=`<div class="alert alert-ok">✅ Presença salva com sucesso para ${getAuxData()}!</div>`;
   setTimeout(()=>el.innerHTML='',3000);
 }
 
@@ -691,7 +855,7 @@ function renderPainel(){
   // Card aniversariantes do dia no painel
   const anivHjPainel=Object.keys(MEMBROS).flatMap(fk=>getMembrosAtuais(fk).filter(m=>isAnivHoje(datasNasc[m]||'')).map(m=>({m,fk})));
   const anivCardHtml=anivHjPainel.length>0?`<div class="card" style="border:2px solid var(--amber);margin-bottom:.75rem"><div class="card-title" style="color:var(--amber)">🎂 Aniversariantes de Hoje!</div>${anivHjPainel.map(({m,fk})=>`<div class="aniv-row"><span class="aniv-nome">${m}</span><span class="aniv-fila">${MEMBROS[fk]?.label?.split('—')[1]?.trim()||fk} · ${calcIdade(datasNasc[m])} anos</span></div>`).join('')}</div>`:'';
-  document.getElementById('painel-filas').innerHTML=anivMesCardHtml+anivCardHtml+html+renderVisitasPainel(data);
+  document.getElementById('painel-filas').innerHTML=html+renderVisitasPainel(data)+anivCardHtml+anivMesCardHtml;
 }
 
 function renderGaps(){
@@ -1056,7 +1220,7 @@ function renderRanking(){
 }
 
 function showScreen(name){
-  ['auxiliar','painel','gaps','historico','ranking','membros','batismo','aniversariantes'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
+  ['auxiliar','painel','gaps','historico','ranking','membros','batismo','aniversariantes','relatorio-aux'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el) el.style.display=s===name?'block':'none';});
 }
 
 function goTab(tab,btn){
@@ -1206,6 +1370,7 @@ async function loadData(){
   // Datas de nascimento pré-carregadas da planilha master (57 membros)
   const DATAS_NASC_MASTER = {"Alice (Ira. Paty)": "17/08/2020", "Benício (Filho - Maigel)": "16/07/2024", "Elisa (Ira. Thaís & Ir. Anderson)": "03/02/2021", "Ester (Ira. Cláudia & Ir. Misael)": "27/10/2020", "Henry (Ir. Daniel & Ira. Gabriela)": "21/03/2022", "João (Primo do Murilo - Jacareí)": "23/11/2018", "Gabriela (Bebê - Ira. Juliana)": "09/08/2024", "Mateus (Ir. Rafael & Ira. Samara)": "07/08/2023", "Vinicius (Ira. Juliana)": "14/01/2020", "Manuela (Ira. Thaís & Ir. Josimar)": "16/08/2020", "Alícia (Ira. Débora - Barueri)": "17/12/2018", "Caio (Ir. Rodrigo & Ira. Tati)": "22/12/2017", "Anne (Ira. Aline e Ir. Cláudio)": "16/12/2016", "Clarice (Ir. Letícia)": "18/12/2017", "Heitor (Ira. Paty & Ir. Juninho)": "18/12/2016", "Euza (Ira. Delvânia)": "04/10/2017", "Levi (Ir. Rafael & Ira. Samara)": "09/10/2017", "Isadora Ashley": "02/05/2017", "Lorenzo (Ir. Daniel & Ira. Gabriela)": "02/08/2017", "Lorenzo (Ira. Lidiane)": "27/05/2016", "Murilo (Ira. Aline)": "15/05/2017", "Pedrinho (Ir. Rafinha & Ira. Ariele)": "20/01/2017", "Ana Lívia (Ira. Juliana)": "12/10/2015", "Gabriela (Ira. Ana Paula)": "29/01/2013", "Joaquim (Primo do Murilo - Jacareí)": "02/04/2015", "Gabriela (Ira. Kelly)": "23/02/2013", "Lucca (Ir. Rodrigo & Ira. Tati)": "01/06/2013", "Heloísa (Ira. Ione - Vila Maria)": "01/11/2012", "Isys (Ira. Bete)": "08/10/2015", "Rodrigo (Ir. Ismael & Ira. Regina)": "09/06/2014", "Rebeca (Ir. Maurício)": "09/05/2015", "Sara (Ira. Lene)": "28/03/2013", "Valentina (Ira. Lidiane)": "04/11/2013", "Caio Gasparetti": "13/04/2009", "Felipe (Auxiliar)": "16/03/2001", "Gabriel (Ir. Maurício)": "10/03/2010", "Guilherme (Auxiliar)": "17/01/2008", "Emily (Ira. Andriele)": "31/10/2011", "Henrique (Ira. Rosana & Ir. Toninho)": "05/01/2010", "Geovanna (Ira. Audrey & Ir. Kleber)": "12/11/2007", "Kaique (Ir. Kleber)": "07/07/2010", "Giovanna (Ira. Silvana)": "21/09/2010", "Isabela (Auxiliar)": "26/09/2002", "Murilo (Auxiliar)": "19/10/2006", "Nicolas (Ira. Letícia)": "15/10/2008", "Nicolas (Ira. Daiane)": "08/07/2007", "Mari Miranda (Auxiliar)": "07/12/1985", "Milena (Auxiliar)": "30/12/2006", "Nicoly (Ira. Bete & Ir. Alexandre)": "18/10/2005", "Pedrão (Ira. Nayara)": "10/03/2009", "Rafaela R.": "10/02/2015", "Sabrina (Auxiliar)": "18/06/2004", "Sâmela": "21/08/2010", "Samuelzinho (Flauta - Ira. Adriana)": "19/09/2005", "Vitão (Ir. Marcelo & Ira. Léia)": "10/02/2011", "Ana Beatriz (São Francisco Xavier)": "04/03/2009", "Vitor (Vila Industrial)": "08/09/2006"};
   try{const r=await window._fbGet('datas_nasc');if(r) datasNasc=JSON.parse(r);}catch(e){}
+  try{const r=await window._fbGet('sem_recit');if(r) semRecit=JSON.parse(r);}catch(e){}
   // Mesclar: dados do Firebase têm prioridade (edições manuais prevalecem)
   Object.entries(DATAS_NASC_MASTER).forEach(([nome,nasc])=>{
     if(!datasNasc[nome]) datasNasc[nome]=nasc;
@@ -1233,6 +1398,9 @@ async function saveVisitasPorData(){
 }
 async function saveDatasNasc(){
   try{ await window._fbSet('datas_nasc', JSON.stringify(datasNasc)); }catch(e){}
+}
+async function saveSemRecit(){
+  try{ await window._fbSet('sem_recit', JSON.stringify(semRecit)); }catch(e){}
 }
 async function saveBatismos(){
   try{ await window._fbSet('batismos', JSON.stringify(batismos)); }catch(e){}
@@ -1343,6 +1511,7 @@ function renderMembrosAtivos(){
             <span class="membro-manage-name">${m}${idade!==null?' ('+idade+'a)':''}${anivHj?' 🎂':''}</span>
             ${mostrarBat?`<label class="batismo-label"><input type="checkbox" class="batismo-cb" ${batismos[m]?'checked':''} onchange="toggleBatismo('${mE}',this.checked)">⭐</label>`:''}
             <button class="${nascBtnCls}" onclick="editarNascCoop('${mE}')">${nascBtnTxt}</button>
+            <button class="btn-edit-nome" onclick="abrirTransferirFila('${key}','${mE}')" title="Transferir fila">↕️</button>
             <button class="btn-edit-nome" onclick="editarNomeMembro('${key}','${mE}')">✏️</button>
             <button class="btn-remove-membro" onclick="removerMembro('${key}','${mE}')">✕</button>
           </div>`;
@@ -1660,6 +1829,188 @@ function renderVisitasPainel(data){
         }).join('')}
       </div>`).join('')}
   </div>`;
+}
+
+// ─── VISITAS PELO AUXILIAR ────────────────────────────────────────────────────
+function editarVisitaAux(id, data, fila){
+  const nomeEl = document.getElementById(`vnome-${id}`);
+  if(!nomeEl) return;
+  const nomeAtual = nomeEl.textContent;
+  nomeEl.innerHTML = `<input id="vinput-${id}" value="${nomeAtual}"
+    style="border:1px solid var(--teal);border-radius:6px;padding:3px 7px;font-size:12px;outline:none;width:120px"
+    onkeydown="if(event.key==='Enter') salvarVisitaAux('${id}','${data}','${fila}')">
+    <button onclick="salvarVisitaAux('${id}','${data}','${fila}')"
+      style="padding:2px 8px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;margin-left:3px">✓</button>`;
+  document.getElementById(`vinput-${id}`)?.focus();
+}
+
+async function salvarVisitaAux(id, data, fila){
+  const input = document.getElementById(`vinput-${id}`);
+  const novoNome = input?.value?.trim();
+  if(!novoNome) return;
+  const chave = `${data}|${fila}`;
+  const v = visitasPorData[chave]?.find(x=>x.id===id);
+  if(v){
+    const nomeAntigo = v.nome;
+    v.nome = novoNome;
+    // Atualizar também em presencas
+    const pkey = `${data}|${fila}`;
+    if(presencas[pkey]){
+      const idx = presencas[pkey].indexOf(nomeAntigo);
+      if(idx>=0) presencas[pkey][idx]=novoNome;
+    }
+    await saveVisitasPorData();
+    await saveData();
+  }
+  renderFilasAux();
+}
+
+async function excluirVisitaAux(id, data, fila){
+  if(!confirm('Remover esta visita?')) return;
+  const chave = `${data}|${fila}`;
+  const v = visitasPorData[chave]?.find(x=>x.id===id);
+  if(v){
+    // Remover de presencas
+    const pkey = `${data}|${fila}`;
+    if(presencas[pkey]) presencas[pkey]=presencas[pkey].filter(n=>n!==v.nome);
+    // Remover da lista de visitas
+    visitasPorData[chave]=visitasPorData[chave].filter(x=>x.id!==id);
+    if(visitasPorData[chave].length===0) delete visitasPorData[chave];
+    await saveVisitasPorData();
+    await saveData();
+  }
+  renderFilasAux();
+}
+
+// ─── RELATÓRIO DO AUXILIAR ────────────────────────────────────────────────────
+function renderRelatorioAux(){
+  const fu = currentUser?.fila||'all';
+  const nomeFila = fu!=='all' ? MEMBROS[fu]?.label : 'Todas as Filas';
+  document.getElementById('rel-aux-titulo').textContent = `📊 ${nomeFila}`;
+
+  const hoje = getToday();
+  const ultima = getUltimaReuniao();
+  const reunioesRealizadas = DOMINGOS.filter(d=>dateLE(d,ultima)&&TOTAL_OFICIAL_2026[d]!=null);
+  const nReun = reunioesRealizadas.length;
+
+  const filas = fu==='all' ? Object.keys(MEMBROS) : [fu];
+  let html = '';
+
+  filas.forEach(fk=>{
+    const fila = MEMBROS[fk];
+    const membros = getMembrosAtuais(fk);
+    if(!membros.length) return;
+
+    // KPIs da fila
+    const totalPres = reunioesRealizadas.reduce((s,d)=>s+getPresentes(d,fk).filter(m=>membros.includes(m)).length,0);
+    const maxPossivel = membros.length * nReun;
+    const pctFila = maxPossivel>0?Math.round(totalPres/maxPossivel*100):0;
+    const filasBat = ['3M','4M','3F','4F'];
+    const mostrarBat = filasBat.includes(fk);
+    const batCount = mostrarBat ? membros.filter(m=>batismos[m]).length : 0;
+    const pctBat = mostrarBat && membros.length>0 ? Math.round(batCount/membros.length*100) : 0;
+
+    // Reuniões enviadas pela fila
+    const enviadas = reunioesRealizadas.filter(d=>getPresentes(d,fk).length>0).length;
+
+    html += `<div class="card" style="margin-bottom:.75rem">
+      <div class="card-title">${fila.label}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.875rem">
+        <div class="rel-stat"><div class="rel-stat-title">Freq. média</div><div class="rel-stat-val">${pctFila}%</div></div>
+        <div class="rel-stat"><div class="rel-stat-title">Enviadas</div><div class="rel-stat-val">${enviadas}/${nReun}</div></div>
+        ${mostrarBat?`<div class="rel-stat"><div class="rel-stat-title">Batizados</div><div class="rel-stat-val">${pctBat}%</div></div>`:`<div class="rel-stat"><div class="rel-stat-title">Membros</div><div class="rel-stat-val">${membros.length}</div></div>`}
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em">Frequência individual</div>
+      ${membros.map(m=>{
+        const presMembro = reunioesRealizadas.filter(d=>getPresentes(d,fk).includes(m)||DOMINGOS.filter(d2=>d2<=ultima).some(d2=>getPresentes(d2,getFilaAtual(m)||fk).includes(m)&&d2===d)).length;
+        // Contar presenças em todas as filas por onde passou
+        const totalM = DOMINGOS.filter(d=>dateLE(d,ultima)).reduce((s,d)=>{
+          return s + Object.keys(MEMBROS).filter(k2=>getPresentes(d,k2).includes(m)).length>0?1:0;
+        },0);
+        const pctM = nReun>0?Math.round(totalM/nReun*100):0;
+        const apto = aptoMudarFila(m,fk)&&PROX_FILA[fk];
+        const aniv = isAnivHoje(datasNasc[m]||'');
+        const barColor = pctM>=75?'var(--teal)':pctM>=50?'var(--amber)':'var(--red)';
+        return `<div class="rel-row">
+          <span class="rel-nome">${m}${aniv?' 🎂':''}${apto?`<span class="rel-badge badge-apto">⬆️ subir</span>`:''}${datasNasc[m]?'':' <span style="font-size:9px;color:var(--amber)">⚠nasc</span>'}</span>
+          <div class="rel-bar-wrap"><div class="rel-bar-fill" style="width:${pctM}%;background:${barColor}"></div></div>
+          <span class="rel-pct" style="color:${barColor}">${pctM}%</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  document.getElementById('rel-aux-content').innerHTML = html ||
+    '<div class="empty">Nenhum dado disponível.</div>';
+}
+
+// ─── TRANSFERÊNCIA DE FILA (COOPERADOR) ───────────────────────────────────────
+function abrirTransferirFila(filaKey, nome){
+  const genero = filaKey.slice(-1);
+  const filasDisponiveis = ['1','2','3','4'].map(n=>n+genero);
+  const nomeE = nome.replace(/'/g,"\'").replace(/"/g,'&quot;');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'move-modal-overlay';
+  overlay.id = 'transfer-modal-overlay';
+  overlay.innerHTML = `
+    <div class="move-modal">
+      <div class="move-modal-title">↕️ Transferir fila</div>
+      <div class="move-modal-sub" style="margin-bottom:.75rem"><b>${nome}</b><br>Selecione a fila destino:</div>
+      ${filasDisponiveis.map(fk=>{
+        const isAtual = fk===filaKey;
+        return `<button class="transfer-fila-btn${isAtual?' atual':''}"
+          ${isAtual?'disabled':''}
+          onclick="confirmarTransferencia('${filaKey}','${fk}','${nomeE}')">
+          <div class="fila-dot ${genero==='M'?'dot-m':'dot-f'}" style="width:8px;height:8px"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600">${MEMBROS[fk]?.label||fk}</div>
+            <div style="font-size:11px;color:var(--muted)">${isAtual?'Fila atual':MEMBROS[fk]?.faixa||''}</div>
+          </div>
+          ${isAtual?'<span style="margin-left:auto;font-size:10px;color:var(--teal-d)">atual</span>':''}
+        </button>`;
+      }).join('')}
+      <div class="move-modal-btns" style="margin-top:.5rem">
+        <button class="btn-cancel" onclick="document.getElementById('transfer-modal-overlay').remove()">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{if(e.target===overlay) overlay.remove();});
+}
+
+async function confirmarTransferencia(filaOrigem, filaDestino, nome){
+  document.getElementById('transfer-modal-overlay')?.remove();
+  if(filaOrigem===filaDestino) return;
+
+  // Registrar mudança — sobrescreve qualquer mudança anterior
+  mudancasFila[nome] = {de: filaOrigem, para: filaDestino};
+  await saveMudancasFila();
+
+  // Se o membro estava em membrosExtras da fila origem, mover para destino
+  if(membrosExtras[filaOrigem]){
+    const idx = membrosExtras[filaOrigem].indexOf(nome);
+    if(idx>=0){
+      membrosExtras[filaOrigem].splice(idx,1);
+      if(!membrosExtras[filaDestino]) membrosExtras[filaDestino]=[];
+      if(!membrosExtras[filaDestino].includes(nome)) membrosExtras[filaDestino].push(nome);
+      await saveMembrosExtras();
+    }
+  }
+
+  // Se estava em membrosRemovidos da fila origem (membro original do código), adicionar na destino como extra
+  const originaisOrigem = MEMBROS[filaOrigem]?.membros||[];
+  const originaisDestino = MEMBROS[filaDestino]?.membros||[];
+  if(originaisOrigem.includes(nome) && !originaisDestino.includes(nome)){
+    if(!membrosExtras[filaDestino]) membrosExtras[filaDestino]=[];
+    if(!membrosExtras[filaDestino].includes(nome)) membrosExtras[filaDestino].push(nome);
+    if(!membrosRemovidos[filaOrigem]) membrosRemovidos[filaOrigem]=[];
+    if(!membrosRemovidos[filaOrigem].includes(nome)) membrosRemovidos[filaOrigem].push(nome);
+    await saveMembrosExtras();
+    await saveMembrosRemovidos();
+  }
+
+  renderMembros();
+  alert(`✅ ${nome} transferido para ${MEMBROS[filaDestino]?.label||filaDestino}!`);
 }
 
 renderLoginFields();
