@@ -369,6 +369,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height
       <div style="font-size:11px;color:var(--muted);margin-bottom:.75rem">Gráfico de linha: laranja = 2025 · verde = 2026. Tabela: barra 2026 (topo), 2025 (meio), app (baixo).</div>
       <div id="hist-list"></div>
     </div>
+    <div class="card" style="margin-top:.75rem">
+      <div class="card-title">📊 Comparativo 2026 vs 2025 — cronológico</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:var(--teal)"></span>2026</span>
+        <span><span class="legend-dot" style="background:#E8951A"></span>2025</span>
+      </div>
+      <div id="hist-pareto" style="overflow-x:auto;padding-bottom:.5rem"></div>
+    </div>
   </div>
   <div id="screen-membros" style="display:none">
     <div class="membros-tab-row">
@@ -818,6 +826,8 @@ function toggleM(fila,nome,checked){
   const b=document.getElementById(`badge-${fila}`);if(b) b.textContent=`${pres}/${total}`;
   const p=document.getElementById(`prog-${fila}`);if(p) p.style.width=`${total?Math.round(pres/total*100):0}%`;
   updateAuxCount();
+  // Auto-salvar no Firebase a cada marcação
+  saveData();
 }
 
 function addVisitaNome(fila, nome){
@@ -833,6 +843,7 @@ function addVisitaNome(fila, nome){
   const pkey=`${data}|${fila}`;
   if(!presencas[pkey]) presencas[pkey]=[];
   if(!presencas[pkey].includes(n)) presencas[pkey].push(n);
+  // Salvar no Firebase (sem await para não bloquear UI)
   saveVisitasPorData();
   saveData();
   renderFilasAux();
@@ -878,7 +889,7 @@ function updateAuxCount(){
   const el=document.getElementById('aux-count');if(el) el.textContent=`${t} presente(s) registrado(s)`;
 }
 
-async function salvarPresenca(){
+async async function salvarPresenca(){
   await saveData();
   const el=document.getElementById('aux-alert');
   el.innerHTML=`<div class="alert alert-ok">✅ Presença salva com sucesso para ${getAuxData()}!</div>`;
@@ -1005,6 +1016,102 @@ function renderHistorico(){
     </div>`;
   }).join('');
   document.getElementById('hist-tabela').innerHTML=rows;
+
+  // Gráfico de barras comparativo 2026 vs 2025
+  renderParetoHistorico(passados);
+}
+
+function renderParetoHistorico(passados){
+  const el = document.getElementById('hist-pareto');
+  if(!el) return;
+
+  // Séries cronológicas
+  const d25keys = Object.keys(TOTAL_OFICIAL_2025).sort((a,b)=>dateCmp(a).localeCompare(dateCmp(b)));
+  const maxVal = Math.max(
+    ...passados.map(d=>TOTAL_OFICIAL_2026[d]||0),
+    ...d25keys.map(d=>TOTAL_OFICIAL_2025[d]||0)
+  );
+
+  // Dimensões
+  const barW = 14;   // largura de cada barra
+  const gap = 3;     // gap entre par de barras
+  const groupW = barW*2 + gap + 8; // largura total por grupo
+  const svgH = 220;
+  const chartH = 160;
+  const paddingL = 36;
+  const paddingB = 40;
+  const totalW = paddingL + passados.length * groupW + 20;
+
+  // Escala
+  const scaleY = v => chartH - Math.round(v / maxVal * chartH);
+  const barH = v => Math.round(v / maxVal * chartH);
+
+  // Linhas de grade
+  const gridLines = [0, 20, 40, 60, 80].map(pct => {
+    const val = Math.round(maxVal * pct / 100);
+    const y = scaleY(val) + 10;
+    return `<line x1="${paddingL}" y1="${y}" x2="${totalW}" y2="${y}"
+      stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="${paddingL-4}" y="${y+4}" text-anchor="end" font-size="9"
+        fill="var(--hint)">${val}</text>`;
+  }).join('');
+
+  // Barras
+  let bars = '';
+  let xLabels = '';
+  passados.forEach((d26, i) => {
+    const x = paddingL + i * groupW;
+    const v26 = TOTAL_OFICIAL_2026[d26] || 0;
+    // Alinhar 2025 pela mesma semana ordinal
+    const v25 = TOTAL_OFICIAL_2025[d25keys[i]] || 0;
+
+    const h26 = barH(v26);
+    const h25 = barH(v25);
+    const y26 = chartH - h26 + 10;
+    const y25 = chartH - h25 + 10;
+
+    // Barra 2026
+    bars += `<rect x="${x}" y="${y26}" width="${barW}" height="${h26}"
+      fill="var(--teal)" rx="2" opacity=".85"/>`;
+    // Valor 2026
+    if(v26 > 0) bars += `<text x="${x + barW/2}" y="${y26-3}" text-anchor="middle"
+      font-size="8" fill="var(--teal-d)" font-weight="600">${v26}</text>`;
+
+    // Barra 2025
+    bars += `<rect x="${x + barW + gap}" y="${y25}" width="${barW}" height="${h25}"
+      fill="#E8951A" rx="2" opacity=".7"/>`;
+    // Valor 2025
+    if(v25 > 0) bars += `<text x="${x + barW + gap + barW/2}" y="${y25-3}" text-anchor="middle"
+      font-size="8" fill="#8B5200">${v25}</text>`;
+
+    // Label do eixo X (dia/mês)
+    xLabels += `<text x="${x + barW}" y="${chartH + 24}" text-anchor="middle"
+      font-size="8.5" fill="var(--muted)" transform="rotate(-45, ${x + barW}, ${chartH + 24})"
+      >${d26.slice(0,5)}</text>`;
+  });
+
+  // Linha de média 2026
+  const media26 = Math.round(passados.reduce((s,d)=>s+(TOTAL_OFICIAL_2026[d]||0),0)/passados.length);
+  const yMedia = chartH - barH(media26) + 10;
+  const mediaLine = `<line x1="${paddingL}" y1="${yMedia}" x2="${totalW}" y2="${yMedia}"
+    stroke="var(--teal-d)" stroke-width="1.5" stroke-dasharray="5,3" opacity=".6"/>
+    <text x="${totalW+2}" y="${yMedia+4}" font-size="9" fill="var(--teal-d)">~${media26}</text>`;
+
+  // Linha de média 2025
+  const media25 = Math.round(d25keys.slice(0,passados.length).reduce((s,d)=>s+(TOTAL_OFICIAL_2025[d]||0),0)/passados.length);
+  const yMedia25 = chartH - barH(media25) + 10;
+  const mediaLine25 = `<line x1="${paddingL}" y1="${yMedia25}" x2="${totalW}" y2="${yMedia25}"
+    stroke="#E8951A" stroke-width="1.5" stroke-dasharray="5,3" opacity=".5"/>
+    <text x="${totalW+2}" y="${yMedia25+4}" font-size="9" fill="#8B5200">~${media25}</text>`;
+
+  el.innerHTML = `<svg viewBox="0 0 ${totalW+40} ${svgH}" xmlns="http://www.w3.org/2000/svg"
+    style="width:100%;min-width:${Math.max(400,totalW+40)}px;font-family:inherit">
+    ${gridLines}
+    ${bars}
+    ${xLabels}
+    ${mediaLine}
+    ${mediaLine25}
+  </svg>`;
 }
 
 function buildRankFilters(){
@@ -1530,7 +1637,7 @@ async function loadTotaisOficiais(){
   }catch(e){}
 }
 
-async function saveTotalOficial(data, valor){
+async async function saveTotalOficial(data, valor){
   totaisOficiais[data] = valor;
   TOTAL_OFICIAL_2026[data] = valor;
   try{ await window._fbSet('totais_oficiais', JSON.stringify(totaisOficiais)); }catch(e){}
@@ -1539,8 +1646,10 @@ async function saveTotalOficial(data, valor){
 function renderOficialBox(data){
   const box = document.getElementById('painel-oficial-box');
   if(!box) return;
-  const val = TOTAL_OFICIAL_2026[data] ?? '';
-  const isNovo = !TOTAL_OFICIAL_2026[data];
+  // Sempre pegar a data do calendário do cooperador
+  const dataAtual = data || getCoopData();
+  const val = TOTAL_OFICIAL_2026[dataAtual] ?? '';
+  const isNovo = !TOTAL_OFICIAL_2026[dataAtual];
   box.innerHTML = `
     <div class="oficial-box">
       <label>🎯 Total oficial de recitativos:</label>
@@ -1551,8 +1660,8 @@ function renderOficialBox(data){
     </div>`;
 }
 
-async function submitOficial(){
-  const data = document.getElementById('painel-data').value;
+async async function submitOficial(){
+  const data = getCoopData();
   const input = document.getElementById('oficial-input');
   const val = parseInt(input.value);
   if(isNaN(val) || val < 0){ input.style.borderColor='var(--red)'; return; }
@@ -1560,8 +1669,7 @@ async function submitOficial(){
   await saveTotalOficial(data, val);
   // Feedback visual
   const saved = document.getElementById('oficial-saved');
-  saved.classList.add('show');
-  setTimeout(()=>saved.classList.remove('show'), 2000);
+  if(saved){ saved.classList.add('show'); setTimeout(()=>saved.classList.remove('show'), 2000); }
   // Re-renderizar painel com novo valor
   renderPainel();
 }
