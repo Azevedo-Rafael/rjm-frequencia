@@ -889,7 +889,7 @@ function updateAuxCount(){
   const el=document.getElementById('aux-count');if(el) el.textContent=`${t} presente(s) registrado(s)`;
 }
 
-async async function salvarPresenca(){
+async function salvarPresenca(){
   await saveData();
   const el=document.getElementById('aux-alert');
   el.innerHTML=`<div class="alert alert-ok">✅ Presença salva com sucesso para ${getAuxData()}!</div>`;
@@ -1637,7 +1637,7 @@ async function loadTotaisOficiais(){
   }catch(e){}
 }
 
-async async function saveTotalOficial(data, valor){
+async function saveTotalOficial(data, valor){
   totaisOficiais[data] = valor;
   TOTAL_OFICIAL_2026[data] = valor;
   try{ await window._fbSet('totais_oficiais', JSON.stringify(totaisOficiais)); }catch(e){}
@@ -1660,7 +1660,7 @@ function renderOficialBox(data){
     </div>`;
 }
 
-async async function submitOficial(){
+async function submitOficial(){
   const data = getCoopData();
   const input = document.getElementById('oficial-input');
   const val = parseInt(input.value);
