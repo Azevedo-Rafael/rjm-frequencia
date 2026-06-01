@@ -1474,6 +1474,21 @@ const ALIAS_MAP = {
 
 // Resolver alias: retorna nome oficial se existir
 function resolveAlias(nome){ const r=ALIAS_MAP[nome]; if(r==='__IGNORAR__') return null; return r||nome; }
+
+// Verifica se um membro esteve presente numa data/fila, considerando aliases
+function membroPresente(m, data, filaKey){
+  const pres = getPresentes(data, filaKey);
+  if(pres.includes(m)) return true;
+  // Verificar alias: "Murilo" → "Murilo (Auxiliar)"
+  const mResolvido = resolveAlias(m);
+  if(mResolvido && mResolvido !== m && pres.includes(mResolvido)) return true;
+  return false;
+}
+
+// Verifica se membro apareceu em QUALQUER fila numa data
+function membroApareceNaData(m, data){
+  return Object.keys(MEMBROS).some(k => membroPresente(m, data, k));
+}
 const IDADE_MIN_FILA = {'1M':0,'2M':7,'3M':11,'4M':15,'1F':0,'2F':7,'3F':11,'4F':15};
 const IDADE_MAX_FILA = {'1M':6,'2M':10,'3M':14,'4M':99,'1F':6,'2F':10,'3F':14,'4F':99};
 const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -2170,10 +2185,10 @@ function renderRelatorioAux(){
       <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.04em">Frequência individual</div>
       ${mostrarBat?`<div style="font-size:10px;color:var(--hint);margin-bottom:.5rem;font-style:italic">⭐ = Batizado(a)</div>`:''}
       ${[...membros].map(m=>{
-        // Pré-calcular % para ordenação
+        // Pré-calcular % para ordenação (considera aliases)
         let totalM=0;
         reunioesRealizadas.forEach(d=>{
-          if(Object.keys(MEMBROS).some(k2=>getPresentes(d,k2).includes(m))) totalM++;
+          if(membroApareceNaData(m, d)) totalM++;
         });
         return {m, pctM: nReun>0?Math.round(totalM/nReun*100):0};
       }).sort((a,b)=>b.pctM-a.pctM).map(({m, pctM})=>{
