@@ -1611,7 +1611,13 @@ async function loadData(){
   try{const r=await window._fbGet('presencas');if(r) presencas=JSON.parse(r);}catch(e){}
   Object.entries(HISTORICO_IMPORTADO).forEach(([key,nomes])=>{
     if(!presencas[key]){presencas[key]=nomes;}
-    else{const s=new Set(presencas[key]);nomes.forEach(n=>s.add(n));presencas[key]=[...s];}
+    else{
+      // Resolver aliases antes de mesclar para evitar duplicatas
+      // Ex: Firebase tem 'Alexia (Amiga da Gabriela' e histórico tem 'Alexia (Namorada do Hebert)'
+      const s=new Set(presencas[key].map(n=>resolveAlias(n)).filter(n=>n!=null));
+      nomes.forEach(n=>{const r=resolveAlias(n);if(r) s.add(r);});
+      presencas[key]=[...s];
+    }
   });
   try{const r=await window._fbGet('membros_extras');if(r) membrosExtras=JSON.parse(r);}catch(e){}
   try{const r=await window._fbGet('membros_removidos');if(r) membrosRemovidos=JSON.parse(r);}catch(e){}
