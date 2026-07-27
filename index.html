@@ -826,8 +826,7 @@ function toggleM(fila,nome,checked){
   const b=document.getElementById(`badge-${fila}`);if(b) b.textContent=`${pres}/${total}`;
   const p=document.getElementById(`prog-${fila}`);if(p) p.style.width=`${total?Math.round(pres/total*100):0}%`;
   updateAuxCount();
-  // Auto-salvar no Firebase a cada marcação
-  saveData();
+  // Não auto-salvar aqui — usar botão Salvar para evitar concorrência
 }
 
 function addVisitaNome(fila, nome){
@@ -1638,7 +1637,20 @@ async function loadData(){
 }
 
 async function saveData(){
-  try{ await window._fbSet('presencas', JSON.stringify(presencas)); }catch(e){}
+  try{
+    // Buscar dados atuais do Firebase antes de salvar (merge seguro)
+    const atual = await window._fbGet('presencas');
+    if(atual){
+      const dadosFirebase = JSON.parse(atual);
+      // Mesclar: Firebase tem prioridade para chaves que não estamos alterando
+      // Mas nossas alterações recentes prevalecem
+      const merged = Object.assign({}, dadosFirebase, presencas);
+      await window._fbSet('presencas', JSON.stringify(merged));
+      presencas = merged; // atualizar memória local com o merge
+    } else {
+      await window._fbSet('presencas', JSON.stringify(presencas));
+    }
+  }catch(e){ console.error('Erro ao salvar:', e); }
 }
 async function saveMembrosExtras(){
   try{ await window._fbSet('membros_extras', JSON.stringify(membrosExtras)); }catch(e){}
