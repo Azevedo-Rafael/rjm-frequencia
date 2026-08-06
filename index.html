@@ -762,7 +762,7 @@ function renderFilasAux(){
         ${membrosAtuais.map(m=>{
           const mEsc=m.replace(/'/g,"\\'").replace(/"/g,'&quot;');
           const movBtn=podeMovar
-            ? `<button class="member-move-btn" onclick="event.preventDefault();event.stopPropagation();pedirMudancaFila('${key}','${mEsc}')" title="Mover para ${proxLabel}">↑ ${proxLabel}</button>`
+            ? `<button class="member-move-btn" onclick="event.preventDefault();event.stopPropagation();pedirMudancaFila('${key}',getMembrosAtuais('${key}')[${membrosAtuais.indexOf(m)}])" title="Mover para ${proxLabel}">↑ ${proxLabel}</button>`
             : '';
           const nasc=datasNasc[m]||'';
           const idade=nasc?calcIdade(nasc):null;
@@ -952,7 +952,11 @@ function renderPainel(){
 function renderGaps(){
   const AK=Object.keys(MEMBROS),ultima=getUltimaReuniao();
   const passados=DOMINGOS.filter(d=>dateLE(d,ultima));
-  const gaps=passados.map(d=>({d,faltando:AK.filter(k=>getPresentes(d,k).length===0)})).filter(x=>x.faltando.length>0);
+  const gaps=passados.map(d=>({d,faltando:AK.filter(k=>{
+    // Não marcar como pendência se auxiliar indicou "sem recitativos"
+    if(semRecit[`${d}|${k}`]) return false;
+    return getPresentes(d,k).length===0;
+  })})).filter(x=>x.faltando.length>0);
   if(!gaps.length){document.getElementById('gaps-list').innerHTML='<div class="empty">✅ Nenhuma pendência!</div>';return;}
   let html=`<div class="alert alert-warn">⚠️ ${gaps.length} data(s) com filas pendentes.</div>`;
   html+=[...gaps].reverse().map(({d,faltando})=>{
@@ -1564,13 +1568,20 @@ function getMembrosAtuais(filaKey){
   return todos.sort((a,b) => a.localeCompare(b,'pt-BR'));
 }
 
+// Variáveis globais para mudança de fila (evita problema de escaping com nomes especiais)
+let _pendingMoveNome = '';
+let _pendingMoveFilaKey = '';
+
 function pedirMudancaFila(filaKey, nome){
   const proxKey = PROX_FILA[filaKey];
   if(!proxKey) return;
   const proxLabel = LABEL_FILA_CURTA[proxKey];
   const filaLabel = LABEL_FILA_CURTA[filaKey];
 
-  // Criar modal
+  // Guardar globalmente para evitar escaping de nomes com caracteres especiais
+  _pendingMoveNome = nome;
+  _pendingMoveFilaKey = filaKey;
+
   const overlay = document.createElement('div');
   overlay.className = 'move-modal-overlay';
   overlay.id = 'move-modal-overlay';
@@ -1580,15 +1591,19 @@ function pedirMudancaFila(filaKey, nome){
       <div class="move-modal-sub">
         Mover <b>${nome}</b><br>
         de <b>${filaLabel}</b> → <b>${proxLabel}</b>?<br><br>
-        <span style="font-size:11px;color:var(--hint)">O nome sairá desta fila e aparecerá na ${proxLabel} em ordem alfabética. Esta ação pode ser desfeita pelo administrador.</span>
+        <span style="font-size:11px;color:var(--hint)">O nome sairá desta fila e aparecerá na ${proxLabel} em ordem alfabética.</span>
       </div>
       <div class="move-modal-btns">
         <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-        <button class="btn-confirm" onclick="confirmarMudanca('${filaKey}','${proxKey}','${nome.replace(/'/g,"\'")}')">Confirmar mudança</button>
+        <button class="btn-confirm" onclick="confirmarMudancaPending()">Confirmar mudança</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if(e.target===overlay) fecharModal(); });
+}
+
+async function confirmarMudancaPending(){
+  await confirmarMudanca(_pendingMoveFilaKey, PROX_FILA[_pendingMoveFilaKey], _pendingMoveNome);
 }
 
 function fecharModal(){
