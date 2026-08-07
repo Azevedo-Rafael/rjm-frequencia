@@ -616,7 +616,7 @@ function renderCalAux(){
     // Verificar pendência
     let isPend = false;
     if(isDomingo && isDomInDomingos && !isFuturo && fuAux!=='all'){
-      isPend = getPresentes(dateStr, fuAux).length===0;
+      isPend = getPresentes(dateStr, fuAux).length===0 && !semRecit[`${dateStr}|${fuAux}`];
     }
 
     let cls = 'cal-day';
@@ -684,9 +684,9 @@ function renderCalCoop(){
     const isDomInDomingos = DOMINGOS.includes(dateStr);
     const isSelected = dateStr===calCoopDataSel;
     const isHoje = dateStr===hoje;
-    // Verificar gaps (filas sem registro) para domingos passados
+    // Verificar gaps — ignorar filas com semRecit marcado
     const isPend = isDomingo && isDomInDomingos && dateLE(dateStr, ultima) &&
-      Object.keys(MEMBROS).some(k=>getPresentes(dateStr,k).length===0);
+      Object.keys(MEMBROS).some(k=>getPresentes(dateStr,k).length===0 && !semRecit[`${dateStr}|${k}`]);
 
     let cls='cal-day';
     if(isDomingo && isDomInDomingos) cls+=' domingo';
@@ -938,7 +938,10 @@ function renderPainel(){
         <div class="fila-right">${status}<span class="badge ${bCls}">${pres.length}/${totalMembrosAtivos}</span><span class="chevron" id="pchev-${key}">▼</span></div>
       </div>
       <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
-      <div class="member-list" id="pf-${key}">${pres.length>0?`<div style="padding:.5rem .25rem;font-size:12px;color:var(--muted);line-height:1.8">${pres.join(', ')}</div>`:`<div style="padding:.75rem .25rem;font-size:12px;color:var(--hint);font-style:italic">Nenhum registro. Auxiliar ${fila.aux} ainda não enviou.</div>`}</div>
+      <div class="member-list" id="pf-${key}">${pres.length>0?`<div style="padding:.5rem .25rem;font-size:12px;color:var(--muted);line-height:1.8">${pres.join(', ')}</div>`:`<div style="padding:.75rem .25rem;font-size:12px;color:var(--hint);font-style:italic">${semRecit[`${data}|${key}`]
+            ? 'Auxiliar indicou: não houveram recitativos neste domingo.'
+            : 'Nenhum registro. Auxiliar '+fila.aux+' ainda não enviou.'
+          }</div>`}</div>
     </div>`;
   });
   const oficial=TOTAL_OFICIAL_2026[data]||null,appHoje=totalApp(data);
