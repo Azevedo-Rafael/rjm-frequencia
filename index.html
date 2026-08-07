@@ -921,11 +921,16 @@ function renderPainel(){
   let total=0,filasOk=0,html='';
   AK.forEach(key=>{
     const fila=MEMBROS[key],pres=getPresentes(data,key);
-    total+=pres.length;if(pres.length>0) filasOk++;
+    total+=pres.length;if(pres.length>0 || semRecit[`${data}|${key}`]) filasOk++;
     const pct=fila.membros.length?Math.round(pres.length/fila.membros.length*100):0;
     const bCls=fila.genero==='M'?'badge-m':'badge-f',dotCls=fila.genero==='M'?'dot-m':'dot-f';
     const membrosAtuaisPainel=getMembrosAtuais(key);
-    const status=pres.length>0?'<span class="badge badge-ok">✓ Enviado</span>':'<span class="badge badge-gap">⚠ Pendente</span>';
+    const isSemRecitPainel = !!(semRecit[`${data}|${key}`]);
+    const status = pres.length>0
+      ? '<span class="badge badge-ok">✓ Enviado</span>'
+      : isSemRecitPainel
+        ? '<span class="badge badge-ok" style="background:var(--amber-l);color:var(--amber)">○ Sem recitativos</span>'
+        : '<span class="badge badge-gap">⚠ Pendente</span>';
     const totalMembrosAtivos=membrosAtuaisPainel.length;
     html+=`<div class="fila-block">
       <div class="fila-head" onclick="toggleFila('pf-${key}','pchev-${key}')">
