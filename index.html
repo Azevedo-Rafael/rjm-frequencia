@@ -510,7 +510,17 @@ function selectRole(role,btn){
 function renderLoginFields(){
   const el=document.getElementById('login-fields');
   if(currentRole==='auxiliar'){
-    el.innerHTML=`<div class="input-group"><label>Seu nome</label><select id="aux-user"><option value="">Selecione...</option>${Object.entries(AUX_USERS).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join('')}</select></div>`;
+    // Ordem explícita: meninos (1ª→4ª→todas), moças (1ª→4ª→todas)
+    const ORDEM_AUX = [
+      'arthur','samuel','guilherme','robert','vinicius',
+      'debora','milena','sabrina','mari','isabela',
+      'auxiliar'
+    ];
+    const opts = ORDEM_AUX
+      .filter(k=>AUX_USERS[k])
+      .map(k=>`<option value="${k}">${AUX_USERS[k].nome}</option>`)
+      .join('');
+    el.innerHTML=`<div class="input-group"><label>Seu nome</label><select id="aux-user"><option value="">Selecione...</option>${opts}</select></div>`;
   } else {
     el.innerHTML=`<div class="input-group"><label>PIN do Cooperador</label><input type="password" id="coop-pin" placeholder="••••" maxlength="8"></div>`;
   }
